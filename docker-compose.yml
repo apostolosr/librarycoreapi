@@ -1,0 +1,48 @@
+version: '3.8'
+
+services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: librarycoreapi-postgres
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: librarydb
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - librarycoreapi-network
+
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: librarycoreapi-app
+    environment:
+      - ConnectionStrings__WebApiDatabase=Host=postgres;Port=5432;Database=librarydb;Username=postgres;Password=postgres
+    ports:
+      - "8080:8080"
+    volumes:
+      - .:/app
+      - /app/bin
+      - /app/obj
+    depends_on:
+      postgres:
+        condition: service_healthy
+    networks:
+      - librarycoreapi-network
+    restart: unless-stopped
+
+volumes:
+  postgres_data:
+
+networks:
+  librarycoreapi-network:
+    driver: bridge
