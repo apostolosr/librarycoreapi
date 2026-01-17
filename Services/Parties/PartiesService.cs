@@ -25,6 +25,8 @@ public class PartiesService : IPartiesService
                 Id = p.Id,
                 Name = p.Name,
                 Email = p.Email,
+                Phone = p.Phone,
+                Address = p.Address,
                 Roles = p.PartyRoles.Select(pr => pr.Role.Name).ToList(),
                 CreatedAt = p.CreatedAt
             })
@@ -42,7 +44,7 @@ public class PartiesService : IPartiesService
 
         if (party == null)
         {
-            throw new ApiException("Party not found");
+            throw new KeyNotFoundException("Party not found");
         }
 
         var partyDto = new PartyDto
@@ -50,6 +52,8 @@ public class PartiesService : IPartiesService
             Id = party.Id,
             Name = party.Name,
             Email = party.Email,
+            Phone = party.Phone,
+            Address = party.Address,
             Roles = party.PartyRoles.Select(pr => pr.Role.Name).ToList(),
             CreatedAt = party.CreatedAt
         };
@@ -73,6 +77,8 @@ public class PartiesService : IPartiesService
         {
             Name = createDto.Name,
             Email = createDto.Email,
+            Phone = createDto.Phone,
+            Address = createDto.Address,
             CreatedAt = DateTime.UtcNow
         };
 
@@ -104,6 +110,8 @@ public class PartiesService : IPartiesService
             Id = party.Id,
             Name = party.Name,
             Email = party.Email,
+            Phone = party.Phone,
+            Address = party.Address,
             Roles = party.PartyRoles.Select(pr => pr.Role.Name).ToList(),
             CreatedAt = party.CreatedAt
         };
@@ -134,6 +142,8 @@ public class PartiesService : IPartiesService
 
         party.Name = updateDto.Name;
         party.Email = updateDto.Email;
+        party.Phone = updateDto.Phone;
+        party.Address = updateDto.Address;
         party.UpdatedAt = DateTime.UtcNow;
 
         // Update roles
@@ -172,6 +182,8 @@ public class PartiesService : IPartiesService
             Id = party.Id,
             Name = party.Name,
             Email = party.Email,
+            Phone = party.Phone,
+            Address = party.Address,
             Roles = party.PartyRoles.Select(pr => pr.Role.Name).ToList(),
             CreatedAt = party.CreatedAt
         };

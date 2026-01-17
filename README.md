@@ -69,6 +69,7 @@ A comprehensive Library Management System API built with ASP.NET Core 10.0 and P
 ## Setup Instructions
 
 ### Prerequisites
+- .NET SDK 10.0
 - Docker and Docker Compose
 
 ### Local Development with Docker
@@ -105,7 +106,7 @@ Tests are located in the `Tests/` directory and use Moq for mocking dependencies
 
 ### Entities
 - **Party**: Represents a person (can be Author, Customer, or both)
-- **Role**: Defines roles (Author, Customer)
+- **Role**: Defines roles (Author, Customer, but not limited to these only)
 - **PartyRole**: Many-to-many relationship between Parties and Roles
 - **Category**: Book categories (Fiction, Mystery, etc.)
 - **Book**: Book information

@@ -1,5 +1,6 @@
 using Microsoft.EntityFrameworkCore;
 using LibraryCoreApi.Entities;
+using System.Threading.Tasks;
 
 namespace LibraryCoreApi.Database;
 
@@ -30,6 +31,7 @@ public class DataContext : DbContext
     {
         base.OnModelCreating(modelBuilder);
 
+        // TODO 
         // PartyRole - Many-to-Many relationship
         modelBuilder.Entity<PartyRole>()
             .HasKey(pr => pr.Id);
@@ -104,5 +106,10 @@ public class DataContext : DbContext
 
         modelBuilder.Entity<Reservation>()
             .HasIndex(r => r.Status);
+
+        // Ensure unique role name
+        modelBuilder.Entity<Role>()
+            .HasIndex(r => r.Name)
+            .IsUnique();
     }
 }
