@@ -50,7 +50,7 @@ public class ReservationsService : IReservationsService
 
         if (reservation == null)
         {
-            throw new ApiException("Reservation not found");
+            throw new KeyNotFoundException("Reservation not found");
         }
 
         var reservationDto = new ReservationDto
@@ -81,7 +81,7 @@ public class ReservationsService : IReservationsService
 
         if (customer == null)
         {
-            throw new ApiException("Customer not found");
+            throw new KeyNotFoundException("Customer not found");
         }
 
         var hasCustomerRole = customer.PartyRoles.Any(pr => pr.Role.Name.Equals("Customer", StringComparison.OrdinalIgnoreCase));
@@ -154,7 +154,7 @@ public class ReservationsService : IReservationsService
 
         if (reservation == null)
         {
-            throw new ApiException("Reservation not found");
+            throw new KeyNotFoundException("Reservation not found");
         }
 
         if (reservation.Status != ReservationStatus.Reserved)
@@ -205,7 +205,7 @@ public class ReservationsService : IReservationsService
 
         if (reservation == null)
         {
-            throw new ApiException("Reservation not found");
+            throw new KeyNotFoundException("Reservation not found");
         }
 
         if (reservation.Status != ReservationStatus.Borrowed)

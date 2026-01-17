@@ -36,7 +36,7 @@ public class RolesService : IRolesService
 
         if (role == null)
         {
-            throw new ApiException("Role not found");
+            throw new KeyNotFoundException("Role not found");
         }
 
         var roleDto = new RoleDto
@@ -79,7 +79,7 @@ public class RolesService : IRolesService
 
         if (role == null)
         {
-            throw new ApiException("Role not found");
+            throw new KeyNotFoundException("Role not found");
         }
 
         role.Name = updateDto.Name;
@@ -102,7 +102,7 @@ public class RolesService : IRolesService
         var role = await _context.Roles.FindAsync(id);
         if (role == null)
         {
-            throw new ApiException("Role not found");
+            throw new KeyNotFoundException("Role not found");
         }
 
         _context.Roles.Remove(role);

@@ -119,7 +119,7 @@ public class PartiesService : IPartiesService
 
         if (party == null)
         {
-            throw new ApiException("Party not found");
+            throw new KeyNotFoundException("Party not found");
         }
 
         // Validate roles exist
@@ -129,7 +129,7 @@ public class PartiesService : IPartiesService
 
         if (roles.Count != updateDto.RoleIds.Count)
         {
-            throw new ApiException("One or more roles not found");
+            throw new KeyNotFoundException("One or more roles not found");
         }
 
         party.Name = updateDto.Name;
@@ -182,7 +182,7 @@ public class PartiesService : IPartiesService
         var party = await _context.Parties.FindAsync(id);
         if (party == null)
         {
-            throw new ApiException("Party not found");
+            throw new KeyNotFoundException("Party not found");
         }
 
         _context.Parties.Remove(party);

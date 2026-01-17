@@ -51,7 +51,7 @@ public class BooksService : IBooksService
 
         if (book == null)
         {
-            throw new ApiException("Book not found");
+            throw new KeyNotFoundException("Book not found");
         }
 
         var bookDto = new BookDto
@@ -83,7 +83,7 @@ public class BooksService : IBooksService
 
         if (book == null)
         {
-            throw new ApiException("Book not found");
+            throw new KeyNotFoundException("Book not found");
         }
 
         var availabilityDto = new BookAvailabilityDto
@@ -118,7 +118,7 @@ public class BooksService : IBooksService
 
         if (book == null)
         {
-            throw new ApiException("Book not found");
+            throw new KeyNotFoundException("Book not found");
         }
 
         var availabilityDto = new BookAvailabilityDto
@@ -153,7 +153,7 @@ public class BooksService : IBooksService
 
         if (author == null)
         {
-            throw new ApiException("Author not found");
+            throw new KeyNotFoundException("Author not found");
         }
 
         var hasAuthorRole = author.PartyRoles.Any(pr => pr.Role.Name.Equals("Author", StringComparison.OrdinalIgnoreCase));
@@ -166,7 +166,7 @@ public class BooksService : IBooksService
         var category = await _context.Categories.FindAsync(createDto.CategoryId);
         if (category == null)
         {
-            throw new ApiException("Category not found");
+            throw new KeyNotFoundException("Category not found");
         }
 
         // Check ISBN uniqueness
@@ -241,7 +241,7 @@ public class BooksService : IBooksService
 
         if (book == null)
         {
-            throw new ApiException("Book not found");
+            throw new KeyNotFoundException("Book not found");
         }
 
         // Check ISBN uniqueness if changed
@@ -258,7 +258,7 @@ public class BooksService : IBooksService
         var category = await _context.Categories.FindAsync(updateDto.CategoryId);
         if (category == null)
         {
-            throw new ApiException("Category not found");
+            throw new KeyNotFoundException("Category not found");
         }
 
         book.Title = updateDto.Title;
@@ -306,7 +306,7 @@ public class BooksService : IBooksService
 
         if (book == null)
         {
-            throw new ApiException("Book not found");
+            throw new KeyNotFoundException("Book not found");
         }
 
         // Check if any copies are currently borrowed

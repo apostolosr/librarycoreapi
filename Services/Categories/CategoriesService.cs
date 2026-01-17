@@ -38,7 +38,7 @@ public class CategoriesService : ICategoriesService
 
         if (category == null)
         {
-            throw new ApiException("Category not found");
+            throw new KeyNotFoundException("Category not found");
         }
 
         var categoryDto = new CategoryDto
@@ -80,7 +80,7 @@ public class CategoriesService : ICategoriesService
 
         if (category == null)
         {
-            throw new ApiException("Category not found");
+            throw new KeyNotFoundException("Category not found");
         }
 
         category.Name = updateDto.Name;
@@ -110,7 +110,7 @@ public class CategoriesService : ICategoriesService
 
         if (category == null)
         {
-            throw new ApiException("Category not found");
+            throw new KeyNotFoundException("Category not found");
         }
 
         if (category.Books.Any())
