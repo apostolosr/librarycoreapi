@@ -69,11 +69,9 @@ A comprehensive Library Management System API built with ASP.NET Core 10.0 and P
 ## Setup Instructions
 
 ### Prerequisites
-- .NET 10.0 SDK
-- PostgreSQL 16+ 
-- Docker and Docker Compose (optional)
+- Docker and Docker Compose
 
-### Using Docker Compose (Recommended)
+### Local Development with Docker
 
 1. **Start the services:**
    ```bash
@@ -90,38 +88,18 @@ A comprehensive Library Management System API built with ASP.NET Core 10.0 and P
 3. **Access the API:**
    - API: http://localhost:8080
    - Swagger UI: http://localhost:8080/swagger (Development only)
+   - PostgreSQL: localhost:5432 (from host machine, if needed)
 
-### Manual Setup
+## Running Tests
 
-1. **Update connection string** in `appsettings.Development.json`:
-   ```json
-   {
-     "ConnectionStrings": {
-       "WebApiDatabase": "Host=localhost;Port=5432;Database=librarydb;Username=postgres;Password=postgres"
-     }
-   }
-   ```
+The project uses xUnit for unit testing. Run tests:
 
-2. **Create the database:**
-   ```bash
-   createdb librarydb
-   ```
+```bash
+ dotnet test
+```
 
-3. **Install EF Core tools (if not already installed):**
-   ```bash
-   dotnet tool install --global dotnet-ef
-   ```
+Tests are located in the `Tests/` directory and use Moq for mocking dependencies.
 
-4. **Create and apply migrations:**
-   ```bash
-   dotnet ef migrations add InitialCreate
-   dotnet ef database update
-   ```
-
-5. **Run the application:**
-   ```bash
-   dotnet run
-   ```
 
 ## Database Schema
 
