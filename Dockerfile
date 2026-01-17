@@ -2,6 +2,10 @@
 FROM mcr.microsoft.com/dotnet/sdk:10.0 AS build
 WORKDIR /app
 
+# Install EF Core tools
+RUN dotnet tool install --global dotnet-ef --version 10.0.2
+ENV PATH="$PATH:/root/.dotnet/tools"
+
 # Copy csproj and restore dependencies
 COPY ["LibraryCoreApi.csproj", "./"]
 RUN dotnet restore "LibraryCoreApi.csproj"
