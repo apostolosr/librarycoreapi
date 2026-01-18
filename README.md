@@ -74,14 +74,13 @@ A comprehensive Library Management System API built with ASP.NET Core 10.0 and P
 
 1. **Start the services:**
    ```bash
-   docker-compose up --build
+   make dev
    ```
 
 2. **Create and apply database migrations:**
    ```bash
    # In a new terminal
-   docker exec -it librarycoreapi-app dotnet ef migrations add InitialCreate
-   docker exec -it librarycoreapi-app dotnet ef database update
+   make migrate 
    ```
 
 3. **Access the API:**
@@ -91,13 +90,13 @@ A comprehensive Library Management System API built with ASP.NET Core 10.0 and P
 
 ## Running Tests
 
-The project uses xUnit for unit testing. Run tests:
+Run tests:
 
 ```bash
- dotnet test
+ make test
 ```
 
-Tests are located in the `Tests/` directory and use Moq for mocking dependencies.
+Tests are located in the `Tests/` directory.
 
 
 ## Database Schema
