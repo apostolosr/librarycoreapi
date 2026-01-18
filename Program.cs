@@ -6,6 +6,28 @@ using LibraryCoreApi.Services.Categories;
 using LibraryCoreApi.Services.Roles;
 using LibraryCoreApi.Services.Reservations;
 
+
+// Check if we should run the database seeder
+if (args.Length > 0 && args[0] == "seed")
+{
+    var hostBuilder = Host.CreateDefaultBuilder(args)
+        .ConfigureServices((hostContext, services) =>
+        {
+            services.AddDbContext<DataContext>();
+        });
+
+    var host = hostBuilder.Build();
+    
+    using (var scope = host.Services.CreateScope())
+    {
+        var context = scope.ServiceProvider.GetRequiredService<DataContext>();
+        await DatabaseSeeder.SeedAsync(context);
+        Console.WriteLine("Database seeding completed successfully!");
+    }
+    
+    return;
+}
+
 var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.

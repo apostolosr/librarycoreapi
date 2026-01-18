@@ -31,7 +31,6 @@ public class DataContext : DbContext
     {
         base.OnModelCreating(modelBuilder);
 
-        // TODO 
         // PartyRole - Many-to-Many relationship
         modelBuilder.Entity<PartyRole>()
             .HasKey(pr => pr.Id);

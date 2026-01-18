@@ -20,6 +20,45 @@ services:
     networks:
       - librarycoreapi-network
 
+  rabbitmq:
+    image: rabbitmq:3-management-alpine
+    container_name: librarycoreapi-rabbitmq
+    environment:
+      RABBITMQ_DEFAULT_USER: admin
+      RABBITMQ_DEFAULT_PASS: admin
+    ports:
+      - "5672:5672"   # AMQP port
+      - "15672:15672" # Management UI port
+    volumes:
+      - rabbitmq_data:/var/lib/rabbitmq
+    healthcheck:
+      test: ["CMD", "rabbitmq-diagnostics", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - librarycoreapi-network
+    restart: unless-stopped
+
+  mongodb:
+    image: mongo:7
+    container_name: librarycoreapi-mongodb
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: admin
+      MONGO_INITDB_ROOT_PASSWORD: admin
+    ports:
+      - "27017:27017"
+    volumes:
+      - mongodb_data:/data/db
+    healthcheck:
+      test: ["CMD", "mongosh", "--eval", "db.adminCommand('ping')"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - librarycoreapi-network
+    restart: unless-stopped
+
   app:
     build:
       context: .
@@ -36,12 +75,18 @@ services:
     depends_on:
       postgres:
         condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
+      mongodb:
+        condition: service_healthy
     networks:
       - librarycoreapi-network
     restart: unless-stopped
 
 volumes:
   postgres_data:
+  rabbitmq_data:
+  mongodb_data:
 
 networks:
   librarycoreapi-network:

@@ -77,10 +77,16 @@ A comprehensive Library Management System API built with ASP.NET Core 10.0 and P
     make dev
    ```
 
-2. **Create and apply database migrations:**
+2a. **Create and apply database migrations:**
    # In a new terminal
    ```bash
     make migrate 
+   ```
+
+2b (optional). **Seed database:**
+   # In a new terminal
+   ```bash
+    make seed 
    ```
 
 3. **Access the API:**
@@ -205,12 +211,12 @@ POST /api/reservations/return
 GET /api/reservations/borrowing-visibility
 ```
 
-## Production Deployment
+## Production Deployment (not tested, merely serving as a template)
 
 Use the production Dockerfile and docker-compose file:
 
 ```bash
-docker-compose -f docker-compose.prod.yml up --build
+make publish
 ```
 
 ## Notes

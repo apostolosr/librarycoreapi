@@ -26,7 +26,7 @@ migrate-remove:
 	docker exec -it librarycoreapi-app dotnet ef migrations remove
 
 seed:
-	docker exec -it librarycoreapi-app dotnet run Database/DatabaseSeeder.cs
+	docker exec -it librarycoreapi-app dotnet run -- seed
 	
 
 publish:
