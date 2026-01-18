@@ -52,8 +52,6 @@ A comprehensive Library Management System API built with ASP.NET Core 10.0 and P
 ### Books
 - `GET /api/books` - Get all books
 - `GET /api/books/{id}` - Get book by ID
-- `GET /api/books/availability/{id}` - Get book availability by ID
-- `GET /api/books/availability/title/{title}` - Get book availability by title
 - `POST /api/books` - Create a new book (on behalf of Author)
 - `PUT /api/books/{id}` - Update a book
 - `DELETE /api/books/{id}` - Delete a book
@@ -114,12 +112,12 @@ Tests are located in the `Tests/` directory and use Moq for mocking dependencies
 - **Reservation**: Tracks book reservations and borrowings
 
 ### Key Relationships
-- Party ↔ Role: Many-to-Many (via PartyRole)
-- Book → Author: Many-to-One (Party with Author role)
-- Book → Category: Many-to-One
-- Book → BookCopy: One-to-Many
-- BookCopy → Reservation: One-to-One (optional)
-- Reservation → Customer: Many-to-One (Party with Customer role)
+- Party - Role: Many-to-Many (via PartyRole)
+- Book - Author: Many-to-One (Party with Author role)
+- Book - Category: Many-to-One
+- Book - BookCopy: One-to-Many
+- BookCopy - Reservation: One-to-One (optional)
+- Reservation - Customer: Many-to-One (Party with Customer role)
 
 ## Example Usage
 

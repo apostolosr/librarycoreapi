@@ -79,7 +79,7 @@ public class ReservationsService : IReservationsService
                 .ThenInclude(pr => pr.Role)
             .FirstOrDefaultAsync(p => p.Id == createDto.CustomerId);
 
-        if (customer == null)
+        if (customer == null) 
         {
             throw new KeyNotFoundException("Customer not found");
         }
@@ -91,9 +91,7 @@ public class ReservationsService : IReservationsService
         }
 
         // Find an available copy of the book
-        var availableCopy = await _context.BookCopies
-            .Include(bc => bc.Book)
-            .FirstOrDefaultAsync(bc => bc.BookId == createDto.BookId && bc.IsAvailable);
+        var availableCopy = await _context.BookCopies.FirstOrDefaultAsync(bc => bc.BookId == createDto.BookId && bc.IsAvailable);
 
         if (availableCopy == null)
         {
@@ -148,9 +146,7 @@ public class ReservationsService : IReservationsService
 
     public async Task<ReservationDto> BorrowBook(BorrowBookDto borrowDto)
     {
-        var reservation = await _context.Reservations
-            .Include(r => r.BookCopy)
-            .FirstOrDefaultAsync(r => r.Id == borrowDto.ReservationId);
+        var reservation = await _context.Reservations.FirstOrDefaultAsync(r => r.Id == borrowDto.ReservationId);
 
         if (reservation == null)
         {
@@ -281,3 +277,4 @@ public class ReservationsService : IReservationsService
         return groupedByBook;
     }
 }
+ 

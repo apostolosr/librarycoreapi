@@ -4,7 +4,6 @@ using LibraryCoreApi.Services.Books;
 using Microsoft.AspNetCore.Mvc;
 using Xunit;
 using LibraryCoreApi.DTOs;
-using LibraryCoreApi.Errors;
 
 namespace LibraryCoreApi.Tests.Controllers;
 
@@ -92,93 +91,6 @@ public class BooksControllerTests
     }
 
     [Fact]
-    public async Task GetBookAvailability_ReturnsOkResult_WhenBookExists()
-    {
-        // Arrange
-        var expectedAvailability = new BookAvailabilityDto
-        {
-            BookId = MockHelper.BookId,
-            Title = MockHelper.Title,
-            ISBN = MockHelper.ISBN,
-            TotalCopies = 10,
-            AvailableCopies = 8,
-            Copies = new List<BookCopyInfoDto>
-            {
-                new BookCopyInfoDto { CopyId = 1, CopyNumber = "1-1", IsAvailable = true },
-                new BookCopyInfoDto { CopyId = 2, CopyNumber = "1-2", IsAvailable = false, CurrentBorrower = "John Doe" }
-            }
-        };
-        _mockBooksService.Setup(s => s.GetBookAvailability(It.IsAny<int>())).ReturnsAsync(expectedAvailability);
-
-        // Act
-        var result = await _booksController.GetBookAvailability(MockHelper.BookId);
-
-        // Assert
-        var okResult = Assert.IsType<OkObjectResult>(result.Result);
-        var availability = Assert.IsType<BookAvailabilityDto>(okResult.Value);
-        Assert.Equal(MockHelper.BookId, availability.BookId);
-        Assert.Equal(10, availability.TotalCopies);
-        Assert.Equal(8, availability.AvailableCopies);
-        Assert.Equal(200, okResult.StatusCode);
-        _mockBooksService.Verify(s => s.GetBookAvailability(MockHelper.BookId), Times.Once);
-    }
-
-    [Fact]
-    public async Task GetBookAvailability_ReturnsNotFound_WhenBookDoesNotExist()
-    {
-        // Arrange
-        _mockBooksService.Setup(s => s.GetBookAvailability(It.IsAny<int>())).ReturnsAsync((BookAvailabilityDto)null!);
-
-        // Act
-        var result = await _booksController.GetBookAvailability(999);
-
-        // Assert
-        var notFoundResult = Assert.IsType<NotFoundResult>(result.Result);
-        Assert.Equal(404, notFoundResult.StatusCode);
-        _mockBooksService.Verify(s => s.GetBookAvailability(999), Times.Once);
-    }
-
-    [Fact]
-    public async Task GetBookAvailabilityByTitle_ReturnsOkResult_WhenBookExists()
-    {
-        // Arrange
-        var expectedAvailability = new BookAvailabilityDto
-        {
-            BookId = MockHelper.BookId,
-            Title = MockHelper.Title,
-            ISBN = MockHelper.ISBN,
-            TotalCopies = 5,
-            AvailableCopies = 3
-        };
-        _mockBooksService.Setup(s => s.GetBookAvailabilityByTitle(It.IsAny<string>())).ReturnsAsync(expectedAvailability);
-
-        // Act
-        var result = await _booksController.GetBookAvailabilityByTitle(MockHelper.Title);
-
-        // Assert
-        var okResult = Assert.IsType<OkObjectResult>(result.Result);
-        var availability = Assert.IsType<BookAvailabilityDto>(okResult.Value);
-        Assert.Equal(MockHelper.Title, availability.Title);
-        Assert.Equal(200, okResult.StatusCode);
-        _mockBooksService.Verify(s => s.GetBookAvailabilityByTitle(MockHelper.Title), Times.Once);
-    }
-
-    [Fact]
-    public async Task GetBookAvailabilityByTitle_ReturnsNotFound_WhenBookDoesNotExist()
-    {
-        // Arrange
-        _mockBooksService.Setup(s => s.GetBookAvailabilityByTitle(It.IsAny<string>())).ReturnsAsync((BookAvailabilityDto)null!);
-
-        // Act
-        var result = await _booksController.GetBookAvailabilityByTitle("Non-existent Book");
-
-        // Assert
-        var notFoundResult = Assert.IsType<NotFoundResult>(result.Result);
-        Assert.Equal(404, notFoundResult.StatusCode);
-        _mockBooksService.Verify(s => s.GetBookAvailabilityByTitle("Non-existent Book"), Times.Once);
-    }
-
-    [Fact]
     public async Task CreateBook_ReturnsCreatedAtAction_WhenBookIsCreated()
     {
         // Arrange
@@ -214,7 +126,6 @@ public class BooksControllerTests
         var updateDto = new UpdateBookDto
         {
             Title = "Updated Title",
-            ISBN = MockHelper.ISBN,
             Description = "Updated Description",
             CategoryId = MockHelper.CategoryId,
             PublishedDate = MockHelper.PublishedDate
@@ -239,7 +150,7 @@ public class BooksControllerTests
     {
         // Arrange
         var deletedBook = MockHelper.GetMockBookDto();
-        _mockBooksService.Setup(s => s.DeleteBook(It.IsAny<int>())).ReturnsAsync(deletedBook);
+        _mockBooksService.Setup(s => s.DeleteBook(It.IsAny<int>()));
 
         // Act
         var result = await _booksController.DeleteBook(MockHelper.BookId);

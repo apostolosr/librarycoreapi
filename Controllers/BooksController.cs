@@ -36,32 +36,6 @@ public class BooksController : ControllerBase
         return Ok(book);
     }
 
-    [HttpGet("availability/{id}")]
-    public async Task<ActionResult<BookAvailabilityDto>> GetBookAvailability(int id)
-    {
-        var book = await _booksService.GetBookAvailability(id);
-
-        if (book == null)
-        {
-            return NotFound();
-        }
-
-        return Ok(book);
-    }
-
-    [HttpGet("availability/title/{title}")]
-    public async Task<ActionResult<BookAvailabilityDto>> GetBookAvailabilityByTitle(string title)
-    {
-        var book = await _booksService.GetBookAvailabilityByTitle(title);
-
-        if (book == null)
-        {
-            return NotFound();
-        }
-
-        return Ok(book);
-    }
-
     [HttpPost]
     public async Task<ActionResult<BookDto>> CreateBook(CreateBookDto createDto)
     {

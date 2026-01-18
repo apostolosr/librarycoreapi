@@ -32,6 +32,7 @@ public class BooksService : IBooksService
                 CategoryId = b.CategoryId,
                 CategoryName = b.Category.Name,
                 PublishedDate = b.PublishedDate,
+                Publisher = b.Publisher,
                 TotalCopies = b.Copies.Count,
                 AvailableCopies = b.Copies.Count(c => c.IsAvailable),
                 CreatedAt = b.CreatedAt
@@ -65,82 +66,13 @@ public class BooksService : IBooksService
             CategoryId = book.CategoryId,
             CategoryName = book.Category.Name,
             PublishedDate = book.PublishedDate,
+            Publisher = book.Publisher,
             TotalCopies = book.Copies.Count,
             AvailableCopies = book.Copies.Count(c => c.IsAvailable),
             CreatedAt = book.CreatedAt
         };
 
         return bookDto;
-    }
-
-    public async Task<BookAvailabilityDto> GetBookAvailability(int id)
-    {
-        var book = await _context.Books
-            .Include(b => b.Copies)
-                .ThenInclude(c => c.CurrentReservation!)
-                    .ThenInclude(r => r.Customer)
-            .FirstOrDefaultAsync(b => b.Id == id);
-
-        if (book == null)
-        {
-            throw new KeyNotFoundException("Book not found");
-        }
-
-        var availabilityDto = new BookAvailabilityDto
-        {
-            BookId = book.Id,
-            Title = book.Title,
-            ISBN = book.ISBN,
-            TotalCopies = book.Copies.Count,
-            AvailableCopies = book.Copies.Count(c => c.IsAvailable),
-            Copies = book.Copies.Select(c => new BookCopyInfoDto
-            {
-                CopyId = c.Id,
-                CopyNumber = c.CopyNumber,
-                IsAvailable = c.IsAvailable,
-                CurrentBorrower = c.CurrentReservation != null && 
-                                 c.CurrentReservation.Status == ReservationStatus.Borrowed
-                    ? c.CurrentReservation.Customer.Name
-                    : null
-            }).ToList()
-        };
-
-        return availabilityDto;
-    }
-
-    public async Task<BookAvailabilityDto> GetBookAvailabilityByTitle(string title)
-    {
-        var book = await _context.Books
-            .Include(b => b.Copies)
-                .ThenInclude(c => c.CurrentReservation!)
-                    .ThenInclude(r => r.Customer)
-            .FirstOrDefaultAsync(b => b.Title.ToLower() == title.ToLower());
-
-        if (book == null)
-        {
-            throw new KeyNotFoundException("Book not found");
-        }
-
-        var availabilityDto = new BookAvailabilityDto
-        {
-            BookId = book.Id,
-            Title = book.Title,
-            ISBN = book.ISBN,
-            TotalCopies = book.Copies.Count,
-            AvailableCopies = book.Copies.Count(c => c.IsAvailable),
-            Copies = book.Copies.Select(c => new BookCopyInfoDto
-            {
-                CopyId = c.Id,
-                CopyNumber = c.CopyNumber,
-                IsAvailable = c.IsAvailable,
-                CurrentBorrower = c.CurrentReservation != null && 
-                                 c.CurrentReservation.Status == ReservationStatus.Borrowed
-                    ? c.CurrentReservation.Customer.Name
-                    : null
-            }).ToList()
-        };
-
-        return availabilityDto;
     }
 
     public async Task<BookDto> CreateBook(CreateBookDto createDto)
@@ -227,6 +159,7 @@ public class BooksService : IBooksService
             CategoryId = book.CategoryId,
             CategoryName = book.Category.Name,
             PublishedDate = book.PublishedDate,
+            Publisher = book.Publisher,
             TotalCopies = book.Copies.Count,
             AvailableCopies = book.Copies.Count(c => c.IsAvailable),
             CreatedAt = book.CreatedAt
@@ -244,16 +177,6 @@ public class BooksService : IBooksService
             throw new KeyNotFoundException("Book not found");
         }
 
-        // Check ISBN uniqueness if changed
-        if (book.ISBN != updateDto.ISBN)
-        {
-            var existingBook = await _context.Books.FirstOrDefaultAsync(b => b.ISBN == updateDto.ISBN);
-            if (existingBook != null)
-            {
-                throw new ApiException("Book with this ISBN already exists");
-            }
-        }
-
         // Validate category exists
         var category = await _context.Categories.FindAsync(updateDto.CategoryId);
         if (category == null)
@@ -262,11 +185,11 @@ public class BooksService : IBooksService
         }
 
         book.Title = updateDto.Title;
-        book.ISBN = updateDto.ISBN;
         book.Description = updateDto.Description;
         book.CategoryId = updateDto.CategoryId;
         book.PublishedDate = updateDto.PublishedDate;
         book.UpdatedAt = DateTime.UtcNow;
+        book.Publisher = updateDto.Publisher;
 
         await _context.SaveChangesAsync();
 
@@ -298,7 +221,7 @@ public class BooksService : IBooksService
         };
     }
 
-    public async Task<BookDto> DeleteBook(int id)
+    public async Task DeleteBook(int id)
     {
         var book = await _context.Books
             .Include(b => b.Copies)
@@ -316,33 +239,8 @@ public class BooksService : IBooksService
             throw new ApiException("Cannot delete book with borrowed copies");
         }
 
-        // Reload with relationships before deletion
-        await _context.Entry(book)
-            .Reference(b => b.Author)
-            .LoadAsync();
-        await _context.Entry(book)
-            .Reference(b => b.Category)
-            .LoadAsync();
-
-        var bookDto = new BookDto
-        {
-            Id = book.Id,
-            Title = book.Title,
-            ISBN = book.ISBN,
-            Description = book.Description,
-            AuthorId = book.AuthorId,
-            AuthorName = book.Author.Name,
-            CategoryId = book.CategoryId,
-            CategoryName = book.Category.Name,
-            PublishedDate = book.PublishedDate,
-            TotalCopies = book.Copies.Count,
-            AvailableCopies = book.Copies.Count(c => c.IsAvailable),
-            CreatedAt = book.CreatedAt
-        };
 
         _context.Books.Remove(book);
         await _context.SaveChangesAsync();
-
-        return bookDto;
     }
 }

@@ -4,7 +4,6 @@ using LibraryCoreApi.Services.Parties;
 using Microsoft.AspNetCore.Mvc;
 using Xunit;
 using LibraryCoreApi.DTOs;
-using LibraryCoreApi.Errors;
 
 namespace LibraryCoreApi.Tests.Controllers;
 

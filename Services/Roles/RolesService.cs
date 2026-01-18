@@ -52,6 +52,13 @@ public class RolesService : IRolesService
 
     public async Task<RoleDto> CreateRole(CreateRoleDto createDto)
     {
+        // Check if role already exists
+        var existingRole = await _context.Roles.FirstOrDefaultAsync(r => r.Name == createDto.Name);
+        if (existingRole != null)
+        {
+            throw new ApiException("Role already exists");
+        }
+
         var role = new Role
         {
             Name = createDto.Name,
@@ -80,6 +87,13 @@ public class RolesService : IRolesService
         if (role == null)
         {
             throw new KeyNotFoundException("Role not found");
+        }
+
+        // Check if role already exists
+        var existingRole = await _context.Roles.FirstOrDefaultAsync(r => r.Name == updateDto.Name);
+        if (existingRole != null && existingRole.Id != id)
+        {
+            throw new ApiException("Role already exists");
         }
 
         role.Name = updateDto.Name;
