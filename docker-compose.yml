@@ -66,6 +66,10 @@ services:
     container_name: librarycoreapi-app
     environment:
       - ConnectionStrings__WebApiDatabase=Host=postgres;Port=5432;Database=librarydb;Username=postgres;Password=postgres
+      - RabbitMQ__HostName=rabbitmq
+      - RabbitMQ__Port=5672
+      - RabbitMQ__UserName=admin
+      - RabbitMQ__Password=admin
     ports:
       - "8080:8080"
     volumes:

@@ -3,16 +3,19 @@ using LibraryCoreApi.Database;
 using LibraryCoreApi.Entities;
 using LibraryCoreApi.DTOs;
 using LibraryCoreApi.Errors;
+using LibraryCoreApi.Events;
 
 namespace LibraryCoreApi.Services.Books;
 
 public class BooksService : IBooksService
 {
     private readonly DataContext _context;
+    private readonly IEventPublisher _eventManager;
 
-    public BooksService(DataContext context)
+    public BooksService(DataContext context, IEventPublisher eventManager)
     {
         _context = context;
+        _eventManager = eventManager;
     }
 
     public async Task<IEnumerable<BookDto>> GetBooks()
@@ -164,6 +167,20 @@ public class BooksService : IBooksService
             AvailableCopies = book.Copies.Count(c => c.IsAvailable),
             CreatedAt = book.CreatedAt
         };
+
+        // Publish book created event to RabbitMQ
+        var bookCreatedEvent = new BookCreatedEvent
+        {
+            BookId = bookDto.Id,
+            Title = bookDto.Title,
+            ISBN = bookDto.ISBN,
+            AuthorId = bookDto.AuthorId,
+            CategoryId = bookDto.CategoryId,
+            Publisher = bookDto.Publisher,
+            TotalCopies = bookDto.TotalCopies,
+        };
+
+        await _eventManager.PublishEvent("book.created", bookCreatedEvent);
 
         return bookDto;
     }

@@ -53,6 +53,30 @@ public static class DatabaseSeeder
             });
         }
             
+
+        // Seed Parties
+        await context.Parties.AddAsync(new Party
+        {
+            Name = "A R",
+            Email = "a.r@example.com",
+            Phone = "1234567890",
+            Address = "Galaxy Far Far Away",
+            CreatedAt = DateTime.UtcNow,
+            PartyRoles = new List<PartyRole>
+            {
+                new PartyRole
+                {
+                    RoleId = 1,
+                    AssignedAt = DateTime.UtcNow
+                },
+                new PartyRole
+                {
+                    RoleId = 2,
+                    AssignedAt = DateTime.UtcNow
+                }
+            }
+        });
+
         await context.SaveChangesAsync();
     }
 }

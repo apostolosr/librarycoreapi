@@ -5,6 +5,7 @@ using LibraryCoreApi.Services.Parties;
 using LibraryCoreApi.Services.Categories;
 using LibraryCoreApi.Services.Roles;
 using LibraryCoreApi.Services.Reservations;
+using LibraryCoreApi.Events;
 
 
 // Check if we should run the database seeder
@@ -39,6 +40,7 @@ builder.Services.AddOpenApi();
 builder.Services.AddDbContext<DataContext>();
 
 // Register services
+builder.Services.AddSingleton<IEventPublisher, RabbitEventPubliser>();
 builder.Services.AddScoped<IBooksService, BooksService>();
 builder.Services.AddScoped<IPartiesService, PartiesService>();
 builder.Services.AddScoped<ICategoriesService, CategoriesService>();
