@@ -13,7 +13,7 @@ services:
     volumes:
       - postgres_data:/var/lib/postgresql/data
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      test: ["CMD-SHELL", "PGPASSWORD=postgres pg_isready -U postgres"]
       interval: 10s
       timeout: 5s
       retries: 5
@@ -70,6 +70,10 @@ services:
       - RabbitMQ__Port=5672
       - RabbitMQ__UserName=admin
       - RabbitMQ__Password=admin
+      - RabbitMQ__ExchangeName=library_events
+      - RabbitMQ__QueueName=event_store_queue
+      - MongoDB__ConnectionString=mongodb://admin:admin@mongodb:27017
+      - MongoDB__DatabaseName=library_events
     ports:
       - "8080:8080"
     volumes:

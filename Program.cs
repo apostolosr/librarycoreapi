@@ -30,7 +30,7 @@ if (args.Length > 0 && args[0] == "seed")
 }
 
 var builder = WebApplication.CreateBuilder(args);
-
+ 
 // Add services to the container.
 
 builder.Services.AddControllers();
@@ -40,12 +40,16 @@ builder.Services.AddOpenApi();
 builder.Services.AddDbContext<DataContext>();
 
 // Register services
-builder.Services.AddSingleton<IEventPublisher, RabbitEventPubliser>();
+builder.Services.AddSingleton<IEventPublisher, RabbitMQEventPubliser>();
+builder.Services.AddSingleton<IEventStore, MongoEventStore>();
 builder.Services.AddScoped<IBooksService, BooksService>();
 builder.Services.AddScoped<IPartiesService, PartiesService>();
 builder.Services.AddScoped<ICategoriesService, CategoriesService>();
 builder.Services.AddScoped<IRolesService, RolesService>();
 builder.Services.AddScoped<IReservationsService, ReservationsService>();
+
+// Register background worker for consuming RabbitMQ events
+builder.Services.AddHostedService<RabbitMQEventConsumer>();
 
 var app = builder.Build();
 

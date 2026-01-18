@@ -71,6 +71,10 @@ services:
       - RabbitMQ__Port=5672
       - RabbitMQ__UserName=${RABBITMQ_USER:-admin}
       - RabbitMQ__Password=${RABBITMQ_PASSWORD:-admin}
+      - RabbitMQ__ExchangeName=library_events
+      - RabbitMQ__QueueName=event_store_queue
+      - MongoDB__ConnectionString=mongodb://${MONGO_USER:-admin}:${MONGO_PASSWORD:-admin}@mongodb:27017
+      - MongoDB__DatabaseName=library_events
     ports:
       - "${APP_PORT:-8080}:8080"
     depends_on:

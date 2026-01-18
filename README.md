@@ -26,6 +26,11 @@ A comprehensive Library Management System API built with ASP.NET Core 10.0 and P
 - Get a list of all book titles with currently borrowed copies
 - View which customers have borrowed which books
 
+## Events - Auditing
+
+All actions are published as events to a message broker (support for RabbitMQ) and a background worker stores them (Mongo store as default).
+The events can be retrieved for auditing.
+
 ## API Endpoints
 
 ### Parties
@@ -226,3 +231,5 @@ make publish
 - Books can only be added for parties with the "Author" role
 - Reservations can only be created for parties with the "Customer" role
 - The system tracks the full lifecycle: Reserved → Borrowed → Returned
+- One background worker for storing events retrieved from the message broker currently consumes all events as a POC. This could be enhanced to include multiple workers handling 
+messages routed per entity , ex . books.* , parties.* etc. 

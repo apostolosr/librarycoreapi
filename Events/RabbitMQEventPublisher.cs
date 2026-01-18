@@ -4,17 +4,17 @@ using System.Text.Json;
 
 namespace LibraryCoreApi.Events;
 
-public class RabbitEventPubliser : IEventPublisher, IAsyncDisposable
+public class RabbitMQEventPubliser : IEventPublisher, IAsyncDisposable
 {
     private IConnection? _connection;
     private IChannel? _channel;
     private readonly string _exchangeName;
 
-    private readonly ILogger<RabbitEventPubliser> _logger;
+    private readonly ILogger<RabbitMQEventPubliser> _logger;
 
     private readonly ConnectionFactory _factory;
 
-    public RabbitEventPubliser(IConfiguration configuration, ILogger<RabbitEventPubliser> logger)
+    public RabbitMQEventPubliser(IConfiguration configuration, ILogger<RabbitMQEventPubliser> logger)
     {
         _logger = logger;
         var hostName = configuration["RabbitMQ:HostName"] ?? "localhost";
