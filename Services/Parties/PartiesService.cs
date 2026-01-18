@@ -3,16 +3,19 @@ using LibraryCoreApi.Database;
 using LibraryCoreApi.Entities;
 using LibraryCoreApi.DTOs;
 using LibraryCoreApi.Errors;
+using LibraryCoreApi.Events;
 
 namespace LibraryCoreApi.Services.Parties;
 
 public class PartiesService : IPartiesService
 {
     private readonly DataContext _context;
+    private readonly IEventPublisher _eventManager;
 
-    public PartiesService(DataContext context)
+    public PartiesService(DataContext context, IEventPublisher eventManager)
     {
         _context = context;
+        _eventManager = eventManager;
     }
 
     public async Task<IEnumerable<PartyDto>> GetParties()
@@ -97,6 +100,7 @@ public class PartiesService : IPartiesService
         }
 
         await _context.SaveChangesAsync();
+        
 
         // Reload with roles
         await _context.Entry(party)
@@ -104,6 +108,19 @@ public class PartiesService : IPartiesService
             .Query()
             .Include(pr => pr.Role)
             .LoadAsync();
+
+        // Publish party created event
+        var partyCreatedEvent = new PartyEvent
+        {
+            PartyId = party.Id,
+            Name = party.Name,
+            Email = party.Email,
+            Phone = party.Phone,
+            Address = party.Address,
+            Roles = party.PartyRoles.Select(pr => pr.Role.Name).ToList(),
+        };
+
+        await _eventManager.PublishEvent("party.created", partyCreatedEvent);
 
         var partyDto = new PartyDto
         {
@@ -177,6 +194,19 @@ public class PartiesService : IPartiesService
             .Include(pr => pr.Role)
             .LoadAsync();
 
+        // Publish party updated event
+        var partyUpdatedEvent = new PartyEvent
+        {
+            PartyId = party.Id,
+            Name = party.Name,
+            Email = party.Email,
+            Phone = party.Phone,
+            Address = party.Address,
+            Roles = party.PartyRoles.Select(pr => pr.Role.Name).ToList(),
+        };
+
+        await _eventManager.PublishEvent("party.updated", partyUpdatedEvent);
+
         return new PartyDto
         {
             Id = party.Id,
@@ -199,5 +229,15 @@ public class PartiesService : IPartiesService
 
         _context.Parties.Remove(party);
         await _context.SaveChangesAsync();
+
+        // Publish party deleted event
+        var partyDeletedEvent = new PartyEvent
+        {
+            PartyId = party.Id,
+            Name = party.Name,
+            Email = party.Email,
+            Phone = party.Phone,
+            Address = party.Address
+        };
     }
 }

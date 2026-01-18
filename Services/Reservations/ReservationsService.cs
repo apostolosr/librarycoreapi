@@ -3,16 +3,19 @@ using LibraryCoreApi.Database;
 using LibraryCoreApi.Entities;
 using LibraryCoreApi.DTOs;
 using LibraryCoreApi.Errors;
+using LibraryCoreApi.Events;
 
 namespace LibraryCoreApi.Services.Reservations;
 
 public class ReservationsService : IReservationsService
 {
     private readonly DataContext _context;
+    private readonly IEventPublisher _eventManager;
 
-    public ReservationsService(DataContext context)
+    public ReservationsService(DataContext context, IEventPublisher eventManager)
     {
         _context = context;
+        _eventManager = eventManager;
     }
 
     public async Task<IEnumerable<ReservationDto>> GetReservations()
@@ -126,6 +129,18 @@ public class ReservationsService : IReservationsService
             .Reference(r => r.Customer)
             .LoadAsync();
 
+        // Publish reservation created event
+        var reservationCreatedEvent = new ReservationEvent
+        {
+            ReservationId = reservation.Id,
+            BookCopyId = reservation.BookCopyId,
+            BookTitle = reservation.BookCopy.Book.Title,
+            CopyNumber = reservation.BookCopy.CopyNumber,
+            CustomerId = reservation.CustomerId,
+        };
+
+        await _eventManager.PublishEvent("reservation.created", reservationCreatedEvent);
+
         var reservationDto = new ReservationDto
         {
             Id = reservation.Id,
@@ -174,6 +189,18 @@ public class ReservationsService : IReservationsService
         await _context.Entry(reservation)
             .Reference(r => r.Customer)
             .LoadAsync();
+
+        // Publish reservation borrowed event
+        var reservationBorrowedEvent = new ReservationEvent
+        {
+            ReservationId = reservation.Id,
+            BookCopyId = reservation.BookCopyId,
+            BookTitle = reservation.BookCopy.Book.Title,
+            CopyNumber = reservation.BookCopy.CopyNumber,
+            CustomerId = reservation.CustomerId,
+        };
+
+        await _eventManager.PublishEvent("reservation.borrowed", reservationBorrowedEvent);
 
         var reservationDto = new ReservationDto
         {
@@ -228,6 +255,18 @@ public class ReservationsService : IReservationsService
         await _context.Entry(reservation)
             .Reference(r => r.Customer)
             .LoadAsync();
+        
+        // Publish reservation returned event
+        var reservationReturnedEvent = new ReservationEvent
+        {
+            ReservationId = reservation.Id,
+            BookCopyId = reservation.BookCopyId,
+            BookTitle = reservation.BookCopy.Book.Title,
+            CopyNumber = reservation.BookCopy.CopyNumber,
+            CustomerId = reservation.CustomerId,
+        };
+
+        await _eventManager.PublishEvent("reservation.returned", reservationReturnedEvent);
 
         var reservationDto = new ReservationDto
         {

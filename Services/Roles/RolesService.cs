@@ -3,16 +3,19 @@ using LibraryCoreApi.Database;
 using LibraryCoreApi.Entities;
 using LibraryCoreApi.DTOs;
 using LibraryCoreApi.Errors;
+using LibraryCoreApi.Events;
 
 namespace LibraryCoreApi.Services.Roles;
 
 public class RolesService : IRolesService
 {
     private readonly DataContext _context;
+    private readonly IEventPublisher _eventManager;
 
-    public RolesService(DataContext context)
+    public RolesService(DataContext context, IEventPublisher eventManager)
     {
         _context = context;
+        _eventManager = eventManager;
     }
 
     public async Task<IEnumerable<RoleDto>> GetRoles()
@@ -69,6 +72,16 @@ public class RolesService : IRolesService
         _context.Roles.Add(role);
         await _context.SaveChangesAsync();
 
+        // Publish role created event
+        var roleCreatedEvent = new RoleEvent
+        {
+            RoleId = role.Id,
+            Name = role.Name,
+            Description = role.Description
+        };
+
+        await _eventManager.PublishEvent("role.created", roleCreatedEvent);
+
         var roleDto = new RoleDto
         {
             Id = role.Id,
@@ -102,6 +115,16 @@ public class RolesService : IRolesService
 
         await _context.SaveChangesAsync();
 
+        // Publish role updated event
+        var roleUpdatedEvent = new RoleEvent
+        {
+            RoleId = role.Id,
+            Name = role.Name,
+            Description = role.Description,
+        };
+
+        await _eventManager.PublishEvent("role.updated", roleUpdatedEvent);
+
         return new RoleDto
         {
             Id = role.Id,
@@ -121,5 +144,15 @@ public class RolesService : IRolesService
 
         _context.Roles.Remove(role);
         await _context.SaveChangesAsync();
+
+        // Publish role deleted event
+        var roleDeletedEvent = new RoleEvent
+        {
+            RoleId = role.Id,
+            Name = role.Name,
+            Description = role.Description
+        };
+
+        await _eventManager.PublishEvent("role.deleted", roleDeletedEvent);
     }
 }

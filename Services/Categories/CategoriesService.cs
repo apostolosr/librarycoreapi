@@ -3,16 +3,19 @@ using LibraryCoreApi.Database;
 using LibraryCoreApi.Entities;
 using LibraryCoreApi.DTOs;
 using LibraryCoreApi.Errors;
+using LibraryCoreApi.Events;
 
 namespace LibraryCoreApi.Services.Categories;
 
 public class CategoriesService : ICategoriesService
 {
     private readonly DataContext _context;
+    private readonly IEventPublisher _eventManager;
 
-    public CategoriesService(DataContext context)
+    public CategoriesService(DataContext context, IEventPublisher eventManager)
     {
         _context = context;
+        _eventManager = eventManager;
     }
 
     public async Task<IEnumerable<CategoryDto>> GetCategories()
@@ -63,6 +66,15 @@ public class CategoriesService : ICategoriesService
         _context.Categories.Add(category);
         await _context.SaveChangesAsync();
 
+        // Publish category created event
+        var categoryCreatedEvent = new CategoryEvent
+        {
+            CategoryId = category.Id,
+            Name = category.Name,
+        };
+
+        await _eventManager.PublishEvent("category.created", categoryCreatedEvent);
+
         var categoryDto = new CategoryDto
         {
             Id = category.Id,
@@ -93,6 +105,15 @@ public class CategoriesService : ICategoriesService
             .Collection(c => c.Books)
             .LoadAsync();
 
+        // Publish category updated event
+        var categoryUpdatedEvent = new CategoryEvent
+        {
+            CategoryId = category.Id,
+            Name = category.Name,
+        };
+
+        await _eventManager.PublishEvent("category.updated", categoryUpdatedEvent);
+
         return new CategoryDto
         {
             Id = category.Id,
@@ -120,5 +141,14 @@ public class CategoriesService : ICategoriesService
 
         _context.Categories.Remove(category);
         await _context.SaveChangesAsync();
+
+        // Publish category deleted event
+        var categoryDeletedEvent = new CategoryEvent
+        {
+            CategoryId = category.Id,
+            Name = category.Name,
+        };
+
+        await _eventManager.PublishEvent("category.deleted", categoryDeletedEvent);
     }
 }

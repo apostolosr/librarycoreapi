@@ -168,7 +168,7 @@ public class BooksService : IBooksService
             CreatedAt = book.CreatedAt
         };
 
-        // Publish book created event to RabbitMQ
+        // Publish book created event
         var bookCreatedEvent = new BookCreatedEvent
         {
             BookId = bookDto.Id,
@@ -221,6 +221,16 @@ public class BooksService : IBooksService
             .Collection(b => b.Copies)
             .LoadAsync();
 
+        // Publish book updated event
+        var bookUpdatedEvent = new BookEvent
+        {
+            BookId = book.Id,
+            Title = book.Title,
+            CategoryId = book.CategoryId,
+        };
+
+        await _eventManager.PublishEvent("book.updated", bookUpdatedEvent);
+
         return new BookDto
         {
             Id = book.Id,
@@ -259,5 +269,15 @@ public class BooksService : IBooksService
 
         _context.Books.Remove(book);
         await _context.SaveChangesAsync();
+
+        // Publish book deleted event
+        var bookDeletedEvent = new BookEvent
+        {
+            BookId = book.Id,
+            Title = book.Title,
+            CategoryId = book.CategoryId,
+        };
+
+        await _eventManager.PublishEvent("book.deleted", bookDeletedEvent);
     }
 }
