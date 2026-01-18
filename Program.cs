@@ -43,4 +43,6 @@ app.MapControllers();
 
 app.UseMiddleware<DefaultErrorHandler>();
 
+// TODO: Add authorization middleware for the API for authorizing based on service key
+
 app.Run();

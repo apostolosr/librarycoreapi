@@ -74,13 +74,13 @@ A comprehensive Library Management System API built with ASP.NET Core 10.0 and P
 
 1. **Start the services:**
    ```bash
-   make dev
+    make dev
    ```
 
 2. **Create and apply database migrations:**
-   ```bash
    # In a new terminal
-   make migrate 
+   ```bash
+    make migrate 
    ```
 
 3. **Access the API:**

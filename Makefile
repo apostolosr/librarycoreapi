@@ -1,28 +1,35 @@
-.PHONY test:
+test:
 	dotnet test
 
-.PHONY build:
+build:
 	dotnet build
 
-.PHONY dev:
+dev:
 	docker-compose up --build
 
-.PHONY stop:
+stop:
 	docker-compose down
 
-.PHONY restart:
+clean:
+	docker-compose down -v
+	rm -rf Migrations/
+
+restart:
 	docker-compose down
 	docker-compose up --build
 
-.PHONY migrate:
+migrate:
 	docker exec -it librarycoreapi-app dotnet ef migrations add InitialCreate
 	docker exec -it librarycoreapi-app dotnet ef database update
 
-.PHONY migrate-remove:
+migrate-remove:
 	docker exec -it librarycoreapi-app dotnet ef migrations remove
 
-.PHONY seed:
-	docker exec -it librarycoreapi-app dotnet run --project Database/DatabaseSeeder.cs
+seed:
+	docker exec -it librarycoreapi-app dotnet run Database/DatabaseSeeder.cs
+	
 
-.PHONY publish:
+publish:
 	docker-compose -f docker-compose.prod.yml up --build
+
+.PHONY: test build dev stop clean restart migrate migrate-remove seed publish

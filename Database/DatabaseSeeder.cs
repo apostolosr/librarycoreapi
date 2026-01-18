@@ -7,9 +7,6 @@ public static class DatabaseSeeder
 {
     public static async Task SeedAsync(DataContext context)
     {
-        // Apply pending migrations before seeding
-        await context.Database.MigrateAsync();
-
         // Seed Roles
         if (!await context.Roles.AnyAsync())
         {
@@ -104,4 +101,21 @@ public static class DatabaseSeeder
 
         await context.SaveChangesAsync();
     }
+}
+
+public class Program
+{
+    public static void Main(string[] args)
+    {
+        var host = CreateHostBuilder(args).Build();
+        DatabaseSeeder.SeedAsync(host.Services.GetRequiredService<DataContext>()).Wait();
+    }
+
+    public static IHostBuilder CreateHostBuilder(string[] args) =>
+        Host.CreateDefaultBuilder(args)
+            .ConfigureServices((hostContext, services) =>
+            {
+                services.AddDbContext<DataContext>(options =>
+                    options.UseNpgsql(hostContext.Configuration.GetConnectionString("WebApiDatabase")));
+            });
 }
