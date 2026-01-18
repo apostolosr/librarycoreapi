@@ -21,8 +21,6 @@ public class PartiesService : IPartiesService
     public async Task<IEnumerable<PartyDto>> GetParties()
     {
         var parties = await _context.Parties
-            .Include(p => p.PartyRoles)
-                .ThenInclude(pr => pr.Role)
             .Select(p => new PartyDto
             {
                 Id = p.Id,

@@ -170,6 +170,46 @@ namespace LibraryCoreApi.Tests
                 AssignedAt = DateTime.UtcNow
             };
         }
+
+        internal static Category GetMockCategory()
+        {
+            return new Category 
+            { 
+                Id = CategoryId, 
+                Name = CategoryName, 
+                CreatedAt = DateTime.UtcNow
+            };
+        }
+
+        internal static Book GetMockBook()
+        {
+            return new Book 
+            { 
+                Id = BookId, 
+                Title = Title, 
+                AuthorId = AuthorId, 
+                CategoryId = CategoryId, 
+                ISBN = ISBN, 
+                Description = Description, 
+                PublishedDate = PublishedDate, 
+                CreatedAt = DateTime.UtcNow,
+                Author = GetMockParty(),
+                Category = GetMockCategory(),
+                Copies = new List<BookCopy> { GetMockBookCopy() }
+            };
+        }
+
+        internal static BookCopy GetMockBookCopy()
+        {
+            return new BookCopy 
+            { 
+                Id = BookCopyId, 
+                BookId = BookId, 
+                CopyNumber = CopyNumber, 
+                IsAvailable = true, 
+                CreatedAt = DateTime.UtcNow
+            };
+        }
     }
 }
 

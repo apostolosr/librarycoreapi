@@ -6,7 +6,7 @@ using LibraryCoreApi.Services.Categories;
 using LibraryCoreApi.Services.Roles;
 using LibraryCoreApi.Services.Reservations;
 using LibraryCoreApi.Events;
-
+using Microsoft.EntityFrameworkCore;
 
 // Check if we should run the database seeder
 if (args.Length > 0 && args[0] == "seed")
@@ -14,7 +14,8 @@ if (args.Length > 0 && args[0] == "seed")
     var hostBuilder = Host.CreateDefaultBuilder(args)
         .ConfigureServices((hostContext, services) =>
         {
-            services.AddDbContext<DataContext>();
+            services.AddDbContext<DataContext>(options =>
+                options.UseNpgsql(hostContext.Configuration.GetConnectionString("WebApiDatabase")));
         });
 
     var host = hostBuilder.Build();
@@ -37,7 +38,8 @@ builder.Services.AddControllers();
 // Learn more about configuring OpenAPI at https://aka.ms/aspnet/openapi
 builder.Services.AddOpenApi();
 
-builder.Services.AddDbContext<DataContext>();
+builder.Services.AddDbContext<DataContext>(options =>
+    options.UseNpgsql(builder.Configuration.GetConnectionString("WebApiDatabase")));
 
 // Register services
 builder.Services.AddSingleton<IEventPublisher, RabbitMQEventPubliser>();

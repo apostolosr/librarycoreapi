@@ -6,11 +6,8 @@ namespace LibraryCoreApi.Database;
 
 public class DataContext : DbContext
 {
-    protected readonly IConfiguration Configuration;
-
-    public DataContext(IConfiguration configuration)
+    public DataContext(DbContextOptions<DataContext> options) : base(options)
     {
-        Configuration = configuration;
     }
 
     // DbSets
@@ -21,11 +18,6 @@ public class DataContext : DbContext
     public DbSet<BookCopy> BookCopies { get; set; } = null!;
     public DbSet<Category> Categories { get; set; } = null!;
     public DbSet<Reservation> Reservations { get; set; } = null!;
-
-    protected override void OnConfiguring(DbContextOptionsBuilder options)
-    {
-        options.UseNpgsql(Configuration.GetConnectionString("WebApiDatabase"));
-    }
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {

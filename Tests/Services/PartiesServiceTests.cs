@@ -1,190 +1,247 @@
-
-﻿using Moq;
 using LibraryCoreApi.Database;
 using LibraryCoreApi.Services.Parties;
 using Xunit;
-
+using Microsoft.EntityFrameworkCore;
+using LibraryCoreApi.Entities;
+using LibraryCoreApi.Events;
+using Moq;
+using LibraryCoreApi.DTOs;
+using LibraryCoreApi.Errors;
 
 namespace LibraryCoreApi.Tests.Services;
 
-public class PartiesServiceTests
+public class PartiesServiceTests : IDisposable
 {
+    private readonly DataContext _dbContext;
+    public PartiesServiceTests()
+    {
+        _dbContext = CreateContext();
+        _dbContext.Database.EnsureCreated();
+    }
+
+    private static DataContext CreateContext()
+    {
+        var options = new DbContextOptionsBuilder<DataContext>()
+            .UseInMemoryDatabase(databaseName: Guid.NewGuid().ToString())
+            .Options;
+
+        return new DataContext(options);
+    }
+
+    public void Dispose()
+    {
+        _dbContext.Database.EnsureDeleted();
+        _dbContext.Dispose();
+    }
+
   
-    // [Fact]
-    // public async Task TestGetParties()
-    // {
-    //     // Arrange
-    //     var mockDataContext = new DataContext(new Mock<IConfiguration>().Object)
-    //     {
-    //         Parties = MockHelper.GetQueryableMockDbSet(MockHelper.GetMockParty()).Object,
-    //         PartyRoles = MockHelper.GetQueryableMockDbSet(MockHelper.GetMockPartyRole()).Object,
-    //         Roles = MockHelper.GetQueryableMockDbSet(MockHelper.GetMockRole()).Object
-    //     };
+    [Fact]
+    public async Task TestGetParties()
+    {
+        // Arrange
+        var role = MockHelper.GetMockRole();
+        _dbContext.Roles.Add(role);
+        await _dbContext.SaveChangesAsync();
+        var parties = new List<Party>
+        {
+            new Party { Name = "Test Party 1", Email = "test1@test.com", Phone = "1234567890", Address = "123 Test St, Test City, Test Country", PartyRoles = new List<PartyRole> { new PartyRole { RoleId = 1 } } },
+            new Party { Name = "Test Party 2", Email = "test2@test.com", Phone = "1234567890", Address = "123 Test St, Test City, Test Country", PartyRoles = new List<PartyRole> { new PartyRole { RoleId = 1 } } }
+        };
+        _dbContext.Parties.AddRange(parties);
+        await _dbContext.SaveChangesAsync();
 
-    //     var partiesService = new PartiesService(mockDataContext);
+        var partiesService = new PartiesService(_dbContext, new Mock<IEventPublisher>().Object);
 
-    //     // Act
-    //     var result = await partiesService.GetParties();
+        var partiesDto   = await partiesService.GetParties();
+        Assert.Equal(2, partiesDto.Count());
+        Assert.Equal(parties.First().Id, partiesDto.First().Id);
+        Assert.Equal(parties.First().Name, partiesDto.First().Name);
+        Assert.Equal(parties.First().Email, partiesDto.First().Email);
+        Assert.Equal(parties.First().Phone, partiesDto.First().Phone);
+        Assert.Equal(parties.First().Address, partiesDto.First().Address); 
+        Assert.Equal(new List<string> { "Author" }, partiesDto.First().Roles);
+    }
 
-    //     // Assert
-    //     Assert.Single(result);  
-    //     Assert.Equal(MockHelper.PartyId, result.First().Id);
-    //     Assert.Equal(MockHelper.Name, result.First().Name);
-    //     Assert.Equal(MockHelper.Email, result.First().Email);
-    //     Assert.Equal(MockHelper.Phone, result.First().Phone);
-    //     Assert.Equal(MockHelper.Address, result.First().Address);
-    //     Assert.Equal(new List<string> { "Author", "Customer" }, result.First().Roles);
-    //     Assert.Equal(DateTime.UtcNow, result.First().CreatedAt);
-    // }
+    [Fact]
+    public async Task TestGetPartiesByPartyId()
+    {
+        // Arrange
+        var role = MockHelper.GetMockRole();
+        _dbContext.Roles.Add(role);
+        await _dbContext.SaveChangesAsync();
+        var party = MockHelper.GetMockParty();
+        _dbContext.Parties.Add(party);
+        await _dbContext.SaveChangesAsync();
 
-    // [Fact]
-    // public async Task TestGetPartiesPartyIdDoesNotExist()
-    // {
-    //     // Arrange
-    //     var mockDataContext = new DataContext(new Mock<IConfiguration>().Object)
-    //     {
-    //         Parties = MockHelper.GetQueryableMockDbSet(MockHelper.GetMockParty()).Object,
-    //         PartyRoles = MockHelper.GetQueryableMockDbSet(MockHelper.GetMockPartyRole()).Object,
-    //         Roles = MockHelper.GetQueryableMockDbSet(MockHelper.GetMockRole()).Object
-    //     };
+        var partiesService = new PartiesService(_dbContext, new Mock<IEventPublisher>().Object);
 
-    //     var partiesService = new PartiesService(mockDataContext);
+        var partyDto = await partiesService.GetParty(party.Id);
+        Assert.NotNull(partyDto);
+        Assert.Equal(party.Id, partyDto.Id);
+        Assert.Equal(party.Name, partyDto.Name);
+        Assert.Equal(party.Email, partyDto.Email);
+        Assert.Equal(party.Phone, partyDto.Phone);
+        Assert.Equal(party.Address, partyDto.Address); 
+    }
 
-    //     // Act, Assert
-    //     await Assert.ThrowsAsync<KeyNotFoundException>(() => partiesService.GetParty(MockHelper.PartyId + 1));
-    // }
+    [Fact]
+    public async Task TestGetPartiesPartyIdDoesNotExist()
+    {
+        // Arrange
+        var party = new Party
+            {
+                Name = "Test Party",
+                Email = "test@test.com",
+                Phone = "1234567890",
+                Address = "123 Test St, Test City, Test Country",
+                PartyRoles = new List<PartyRole> { new PartyRole { RoleId = 1 } }
+            };
+        _dbContext.Parties.Add(party);
+        await _dbContext.SaveChangesAsync();
 
-    // [Fact]
-    // public async Task TestCreateParty()
-    // {
-    //     // Arrange
-    //     var mockDataContext = new DataContext(new Mock<IConfiguration>().Object)
-    //     {
-    //         Parties = MockHelper.GetQueryableMockDbSet(MockHelper.GetMockParty()).Object,
-    //         PartyRoles = MockHelper.GetQueryableMockDbSet(MockHelper.GetMockPartyRole()).Object,
-    //         Roles = MockHelper.GetQueryableMockDbSet(MockHelper.GetMockRole()).Object
-    //     };
-    //     var partiesService = new PartiesService(mockDataContext);
-    //     var createDto = new CreatePartyDto
-    //     {
-    //         Name = MockHelper.Name,
-    //         Email = MockHelper.Email,
-    //         Phone = MockHelper.Phone,
-    //         Address = MockHelper.Address,
-    //         RoleIds = new List<int> { 1, 2 }
-    //     };
+        var partiesService = new PartiesService(_dbContext, new Mock<IEventPublisher>().Object);
+        
+        // Act, Assert
+        await Assert.ThrowsAsync<KeyNotFoundException>(() => partiesService.GetParty(MockHelper.PartyId + 1));
+    }
 
-    //     // Act
-    //     PartyDto result = await partiesService.CreateParty(createDto);
+    [Fact]
+    public async Task TestCreateParty()
+    {
+        // Arrange
+          var role = MockHelper.GetMockRole();
+        _dbContext.Roles.Add(role);
+        await _dbContext.SaveChangesAsync();
+        var createDto = new CreatePartyDto
+        {
+            Name = MockHelper.Name,
+            Email = MockHelper.Email,
+            Phone = MockHelper.Phone,
+            Address = MockHelper.Address,
+            RoleIds = new List<int> { 1 }
+        };
+        var mockEventPublisher = new Mock<IEventPublisher>();   
+        mockEventPublisher.Setup(m => m.PublishEvent(It.IsAny<string>(), It.IsAny<object>())).Returns(Task.CompletedTask);
+        var partiesService = new PartiesService(_dbContext, mockEventPublisher.Object);
 
-    //     // Assert
-    //     Assert.NotNull(result);
-    //     Assert.Equal(MockHelper.PartyId, result.Id);
-    //     Assert.Equal(MockHelper.Name, result.Name);
-    //     Assert.Equal(MockHelper.Email, result.Email);
-    //     Assert.Equal(MockHelper.Phone, result.Phone);
-    //     Assert.Equal(MockHelper.Address, result.Address);
-    //     Assert.Equal(new List<string> { "Author", "Customer" }, result.Roles);
-    //     Assert.Equal(DateTime.UtcNow, result.CreatedAt);
-    // }
+        // Act
+        var result = await partiesService.CreateParty(createDto);
 
-    // [Fact]
-    // public async Task TestCreatePartyRoleIdsDoNotExist()
-    // {
-    //     // Arrange
-    //     var mockDataContext = new DataContext(new Mock<IConfiguration>().Object)
-    //     {
-    //         Parties = MockHelper.GetQueryableMockDbSet(MockHelper.GetMockParty()).Object,
-    //         PartyRoles = MockHelper.GetQueryableMockDbSet(MockHelper.GetMockPartyRole()).Object,
-    //         Roles = MockHelper.GetQueryableMockDbSet(MockHelper.GetMockRole()).Object
-    //     };
-    //     var partiesService = new PartiesService(mockDataContext);
-    //     var createDto = new CreatePartyDto
-    //     {
-    //         Name = MockHelper.Name,
-    //         Email = MockHelper.Email,
-    //         Phone = MockHelper.Phone,
-    //         Address = MockHelper.Address,
-    //         RoleIds = new List<int> { 1, 2 }
-    //     };
+        // Assert
+        Assert.NotNull(result);
+        Assert.Equal(MockHelper.PartyId, result.Id);
+        Assert.Equal(MockHelper.Name, result.Name);
+        Assert.Equal(MockHelper.Email, result.Email);
+        Assert.Equal(MockHelper.Phone, result.Phone);
+        Assert.Equal(MockHelper.Address, result.Address);
+        Assert.Equal(new List<string> { "Author" }, result.Roles);
+        Assert.Equal(DateTime.UtcNow.Date, result.CreatedAt.Date);
+        Assert.Equal(DateTime.UtcNow.Minute, result.CreatedAt.Minute);
+        mockEventPublisher.Verify(m => m.PublishEvent(It.IsAny<string>(), It.IsAny<object>()), Times.Once);
+    }
 
-    //     // Act, Assert
-    //     await Assert.ThrowsAsync<ApiException>(() => partiesService.CreateParty(createDto));
-    // }
+    [Fact]
+    public async Task TestCreatePartyRoleIdsDoNotExist()
+    {
+        // Arrange
+        var createDto = new CreatePartyDto
+        {
+            Name = MockHelper.Name,
+            Email = MockHelper.Email,
+            Phone = MockHelper.Phone,
+            Address = MockHelper.Address,
+            RoleIds = new List<int> { 1, 2 }
+        };
 
-    // [Fact]
-    // public async Task TestUpdateParty()
-    // {
-    //     // Arrange
-    //     var mockParty = MockHelper.GetMockParty();
-    //     var mockDataContext = new DataContext(new Mock<IConfiguration>().Object)
-    //     {
-    //         Parties = MockHelper.GetQueryableMockDbSet(MockHelper.GetMockParty()).Object,
-    //         PartyRoles = MockHelper.GetQueryableMockDbSet(MockHelper.GetMockPartyRole()).Object,
-    //         Roles = MockHelper.GetQueryableMockDbSet(MockHelper.GetMockRole()).Object
-    //     };
-    //     var partiesService = new PartiesService(mockDataContext);
-    //     var updateDto = new UpdatePartyDto
-    //     {
-    //         Name = MockHelper.Name,
-    //         Email = MockHelper.Email,
-    //         Phone = MockHelper.Phone,
-    //         Address = MockHelper.Address,
-    //         RoleIds = new List<int> { 1, 2 }
-    //     };
+        var partiesService = new PartiesService(_dbContext, new Mock<IEventPublisher>().Object);
 
-    //     // Act
-    //     PartyDto result = await partiesService.UpdateParty(MockHelper.PartyId, updateDto);
+        // Act, Assert
+        await Assert.ThrowsAsync<ApiException>(() => partiesService.CreateParty(createDto));
+    }
 
-    //     // Assert
-    //     Assert.NotNull(result);
-    //     Assert.Equal(MockHelper.PartyId, result.Id);
-    //     Assert.Equal(MockHelper.Name, result.Name);
-    //     Assert.Equal(MockHelper.Email, result.Email);
-    //     Assert.Equal(MockHelper.Phone, result.Phone);
-    //     Assert.Equal(MockHelper.Address, result.Address);
-    //     Assert.Equal(new List<string> { "Author", "Customer" }, result.Roles);
-    //     Assert.Equal(DateTime.UtcNow, result.CreatedAt);
-    // }
+    [Fact]
+    public async Task TestUpdateParty()
+    {
+        // Arrange
+          var roles = new List<Role>
+            {
+                new Role { Name = "Author" },
+                new Role { Name = "Customer" }
+            };
+        _dbContext.Roles.AddRange(roles);
+         var party = MockHelper.GetMockParty();
+        _dbContext.Parties.Add(party);
+        await _dbContext.SaveChangesAsync();
+        var mockEventPublisher = new Mock<IEventPublisher>();
+        mockEventPublisher.Setup(m => m.PublishEvent(It.IsAny<string>(), It.IsAny<object>())).Returns(Task.CompletedTask);
+        var partiesService = new PartiesService(_dbContext, mockEventPublisher.Object);
+        var updateDto = new UpdatePartyDto
+        {
+            Name = MockHelper.Name,
+            Email = MockHelper.Email,
+            Phone = MockHelper.Phone,
+            Address = MockHelper.Address,
+            RoleIds = new List<int> { 1, 2 }
+        };
 
-    // [Fact]
-    // public async Task TestUpdatePartyRoleIdsDoNotExist()
-    // {
-    //     // Arrange
-    //     var mockDataContext = new DataContext(new Mock<IConfiguration>().Object)
-    //     {
-    //         Parties = MockHelper.GetQueryableMockDbSet(MockHelper.GetMockParty()).Object,
-    //         PartyRoles = MockHelper.GetQueryableMockDbSet(MockHelper.GetMockPartyRole()).Object,
-    //         Roles = MockHelper.GetQueryableMockDbSet(MockHelper.GetMockRole()).Object
-    //     };
-    //     var partiesService = new PartiesService(mockDataContext);
-    //     var updateDto = new UpdatePartyDto
-    //     {
-    //         Name = MockHelper.Name,
-    //         Email = MockHelper.Email,
-    //         Phone = MockHelper.Phone,
-    //         Address = MockHelper.Address,
-    //         RoleIds = new List<int> { 1, 2 }
-    //     };
+        // Act
+        PartyDto result = await partiesService.UpdateParty(MockHelper.PartyId, updateDto);
 
-    //     // Act, Assert
-    //     await Assert.ThrowsAsync<KeyNotFoundException>(() => partiesService.UpdateParty(MockHelper.PartyId, updateDto));
-    // }
+        // Assert
+        Assert.NotNull(result);
+        Assert.Equal(MockHelper.PartyId, result.Id);
+        Assert.Equal(MockHelper.Name, result.Name);
+        Assert.Equal(MockHelper.Email, result.Email);
+        Assert.Equal(MockHelper.Phone, result.Phone);
+        Assert.Equal(MockHelper.Address, result.Address);
+        Assert.Equal(new List<string> { "Author", "Customer" }, result.Roles);
+        Assert.Equal(DateTime.UtcNow.Date, result.CreatedAt.Date);
+        Assert.Equal(DateTime.UtcNow.Minute, result.CreatedAt.Minute);
+        mockEventPublisher.Verify(m => m.PublishEvent(It.IsAny<string>(), It.IsAny<object>()), Times.Once);
+    }
 
-    // [Fact]
-    // public async Task TestDeleteParty()
-    // {
-    //     // Arrange
-    //     var mockDataContext = new DataContext(new Mock<IConfiguration>().Object)
-    //     {
-    //         Parties = MockHelper.GetQueryableMockDbSet(MockHelper.GetMockParty()).Object,
-    //         PartyRoles = MockHelper.GetQueryableMockDbSet(MockHelper.GetMockPartyRole()).Object,
-    //         Roles = MockHelper.GetQueryableMockDbSet(MockHelper.GetMockRole()).Object
-    //     };
-    //     var partiesService = new PartiesService(mockDataContext);
-    //     await partiesService.DeleteParty(MockHelper.PartyId);
+     [Fact]
+    public async Task TestUpdatePartyRoleIdsDoNotExist()
+    {
+        // Arrange
+         var party = MockHelper.GetMockParty();
+        _dbContext.Parties.Add(party);
+        await _dbContext.SaveChangesAsync();
+        var partiesService = new PartiesService(_dbContext, new Mock<IEventPublisher>().Object);
+        var updateDto = new UpdatePartyDto
+        {
+            Name = MockHelper.Name,
+            Email = MockHelper.Email,
+            Phone = MockHelper.Phone,
+            Address = MockHelper.Address,
+            RoleIds = new List<int> { 1, 2 }
+        };
 
-    //     // Assert
-    //     _mockDataContext.Verify(x => x.Parties.Remove(It.Is<Party>(p => p.Id == MockHelper.PartyId)), Times.Once);
-    // }
+         // Act, Assert
+         await Assert.ThrowsAsync<KeyNotFoundException>(() => partiesService.UpdateParty(MockHelper.PartyId, updateDto));
+    }
+
+    
+    [Fact]
+    public async Task TestDeleteParty()
+    {
+        // Arrange
+        var roles = new List<Role>
+            {
+                new Role { Name = "Author" },
+                new Role { Name = "Customer" }
+            };
+        _dbContext.Roles.AddRange(roles);
+        var party = MockHelper.GetMockParty();
+        _dbContext.Parties.Add(party);
+        await _dbContext.SaveChangesAsync();
+
+        var partiesService = new PartiesService(_dbContext, new Mock<IEventPublisher>().Object);
+
+        // Act
+        await partiesService.DeleteParty(party.Id);
+
+        // Assert
+        Assert.Null(await _dbContext.Parties.FindAsync(party.Id));
+    }
 }

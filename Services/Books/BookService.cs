@@ -21,9 +21,6 @@ public class BooksService : IBooksService
     public async Task<IEnumerable<BookDto>> GetBooks()
     {
         var books = await _context.Books
-            .Include(b => b.Author)
-            .Include(b => b.Category)
-            .Include(b => b.Copies)
             .Select(b => new BookDto
             {
                 Id = b.Id,

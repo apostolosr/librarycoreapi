@@ -29,6 +29,7 @@ public class MongoEventStore : IEventStore
         _collection.Indexes.CreateOne(new CreateIndexModel<EventDocument>(indexKeys, indexOptions));
     }
 
+    // store event
     public async Task StoreEventAsync(string eventName, string routingKey, object eventData)
     {
         try
@@ -56,6 +57,7 @@ public class MongoEventStore : IEventStore
         }
     }
 
+    // get events by name
     public async Task<List<EventDocument>> GetEventsAsync(string? eventName = null, int limit = 100)
     {
         var filter = eventName != null
@@ -68,4 +70,12 @@ public class MongoEventStore : IEventStore
             .Limit(limit)
             .ToListAsync();
     }
+
+    // delete all events older than given timespan
+    public async Task DeleteEventsByTimespan(TimeSpan timespan)
+    {
+        var filter = Builders<EventDocument>.Filter.Lte(e => e.Timestamp, DateTime.UtcNow.Subtract(timespan));
+        await _collection.DeleteManyAsync(filter);
+    }
+
 }
