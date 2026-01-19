@@ -78,8 +78,8 @@ All actions are published as events to a message broker (RabbitMQ) and a backgro
 - `GET /api/reservations/borrowing-visibility` - Get list of books with current borrowers
 
 ### Events
-- `GET /api/events/book` - Get book (book, category) - related events
-- `GET /api/events/user` - Get user (party / reservation/ role) - related events
+- `GET /api/events/book?lastIndex=0&pageSize=100` - Get book (book, category) - related events
+- `GET /api/events/user?lastIndex=0&pageSize=100` - Get user (party / reservation/ role) - related events
 
 
 ## Setup Instructions
@@ -245,6 +245,44 @@ make publish
 - Runs continuously as a hosted background service
 - Processes events asynchronously with manual acknowledgment for reliability
 
+#### Current Consumer Policy
+- **QoS Settings**: `prefetchCount: 1` - Processes one message at a time
+- **Routing**: Wildcard pattern `#` - Consumes all events from the exchange
+- **Acknowledgment**: Manual acknowledgment (`autoAck: false`) - Messages are only removed from queue after successful MongoDB storage
+- **Error Handling**: Failed messages are requeued (`requeue: true`) for retry
+- **Connection Recovery**: Automatic reconnection enabled with 10-second retry interval
+
+#### Tradeoffs
+**Current Approach (Sequential Processing):**
+- **Reliability**: High - One message at a time ensures no message loss on failure
+- **Data Integrity**: Guaranteed - Each event is persisted before processing the next
+- **Error Recovery**: Robust - Failed messages are automatically requeued
+- **Memory Efficiency**: Low memory footprint - Only one message in memory at a time
+- **Throughput**: Lower - Cannot process multiple events concurrently
+- **Latency**: Higher - Events must wait in queue for sequential processing
+- **Scalability**: Limited - Single consumer handles all event types
+
+**Performance vs Reliability:**
+The current implementation prioritizes **reliability over performance**, which is appropriate for an event store where data integrity is critical. However, this may become a bottleneck under high event volume.
+
+#### Future Performance Optimizations
+1. **Parallel Processing**
+   - Increase `prefetchCount` to allow multiple unacknowledged messages (e.g., 10-50)
+   - Process multiple events concurrently
+   - Tradeoff: Higher memory usage, but significantly improved throughput
+
+2. **Multiple Consumers with Routing**
+   - Deploy separate consumers for different event types, ex : 
+     - `book.*` → BookEventConsumer
+     - `party.*` → PartyEventConsumer
+     - `reservation.*` → ReservationEventConsumer
+   - Each consumer can have optimized QoS settings per event type
+   - Enables horizontal scaling and independent scaling per event type
+
+3. **Monitoring & Metrics**
+   - Track processing rate, queue depth, and error rates
+   - Enable proactive scaling based on metrics
+
 ### EventCleaner
 - Periodically cleans old events from the MongoDB event store
 - Deletes events older than 1 year (365 days)
@@ -258,4 +296,3 @@ make publish
 - Books can only be added for parties with the "Author" role
 - Reservations can only be created for parties with the "Customer" role
 - The system tracks the full lifecycle: Reserved → Borrowed → Returned
-- Background worker (`RabbitMQEventConsumer`) for storing events retrieved from the message broker currently consumes all events as a POC. This could be enhanced to include multiple workers handling messages routed per entity, e.g., `books.*`, `parties.*`, etc. 
