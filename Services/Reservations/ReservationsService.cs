@@ -130,7 +130,7 @@ public class ReservationsService : IReservationsService
             .LoadAsync();
 
         // Publish reservation created event
-        var reservationCreatedEvent = new ReservationEvent
+        var reservationEvent = new ReservationEvent
         {
             ReservationId = reservation.Id,
             BookCopyId = reservation.BookCopyId,
@@ -139,7 +139,7 @@ public class ReservationsService : IReservationsService
             CustomerId = reservation.CustomerId,
         };
 
-        await _eventManager.PublishEvent("reservation.created", reservationCreatedEvent);
+        await _eventManager.PublishEvent("reservation.created", reservationEvent);
 
         var reservationDto = new ReservationDto
         {

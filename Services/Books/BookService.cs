@@ -166,18 +166,14 @@ public class BooksService : IBooksService
         };
 
         // Publish book created event
-        var bookCreatedEvent = new BookCreatedEvent
+        var bookEvent = new BookEvent
         {
-            BookId = bookDto.Id,
-            Title = bookDto.Title,
-            ISBN = bookDto.ISBN,
-            AuthorId = bookDto.AuthorId,
-            CategoryId = bookDto.CategoryId,
-            Publisher = bookDto.Publisher,
-            TotalCopies = bookDto.TotalCopies,
+            BookId = book.Id,
+            Title = book.Title,
+            CategoryId = book.CategoryId,
         };
 
-        await _eventManager.PublishEvent("book.created", bookCreatedEvent);
+        await _eventManager.PublishEvent("book.created", bookEvent);
 
         return bookDto;
     }

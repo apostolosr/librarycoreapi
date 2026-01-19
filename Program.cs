@@ -7,6 +7,7 @@ using LibraryCoreApi.Services.Roles;
 using LibraryCoreApi.Services.Reservations;
 using LibraryCoreApi.Events;
 using Microsoft.EntityFrameworkCore;
+using LibraryCoreApi.Services.Events;
 
 // Check if we should run the database seeder
 if (args.Length > 0 && args[0] == "seed")
@@ -49,6 +50,7 @@ builder.Services.AddScoped<IPartiesService, PartiesService>();
 builder.Services.AddScoped<ICategoriesService, CategoriesService>();
 builder.Services.AddScoped<IRolesService, RolesService>();
 builder.Services.AddScoped<IReservationsService, ReservationsService>();
+builder.Services.AddScoped<IEventsService, EventsService>();
 
 // Register background worker for consuming RabbitMQ events
 builder.Services.AddHostedService<RabbitMQEventConsumer>();

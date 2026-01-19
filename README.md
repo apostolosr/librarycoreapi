@@ -28,8 +28,16 @@ A comprehensive Library Management System API built with ASP.NET Core 10.0 and P
 
 ## Events - Auditing
 
-All actions are published as events to a message broker (support for RabbitMQ) and a background worker stores them (Mongo store as default).
-The events can be retrieved for auditing.
+All actions are published as events to a message broker (RabbitMQ) and a background worker (`RabbitMQEventConsumer`) stores them in MongoDB (event store).
+
+### Event Storage
+- Events are automatically consumed from RabbitMQ and persisted to MongoDB
+- Events can be retrieved via the Events API endpoints for auditing purposes
+
+### Event Cleanup
+- A background worker (`EventCleaner`) periodically cleans old events from the event store
+- By default, events older than 1 year are deleted
+- Cleanup runs every 24 hours
 
 ## API Endpoints
 
@@ -68,6 +76,11 @@ The events can be retrieved for auditing.
 - `POST /api/reservations/borrow` - Borrow a book (convert reservation to borrowing)
 - `POST /api/reservations/return` - Return a borrowed book
 - `GET /api/reservations/borrowing-visibility` - Get list of books with current borrowers
+
+### Events
+- `GET /api/events/book` - Get book (book, category) - related events
+- `GET /api/events/user` - Get user (party / reservation/ role) - related events
+
 
 ## Setup Instructions
 
@@ -224,6 +237,20 @@ Use the production Dockerfile and docker-compose file:
 make publish
 ```
 
+## Background Workers
+
+### RabbitMQEventConsumer
+- Consumes events from RabbitMQ message broker
+- Automatically stores all events to MongoDB event store
+- Runs continuously as a hosted background service
+- Processes events asynchronously with manual acknowledgment for reliability
+
+### EventCleaner
+- Periodically cleans old events from the MongoDB event store
+- Deletes events older than 1 year (365 days)
+- Runs cleanup every 24 hours
+- Runs as a hosted background service
+
 ## Notes
 
 - All timestamps are stored in UTC
@@ -231,5 +258,4 @@ make publish
 - Books can only be added for parties with the "Author" role
 - Reservations can only be created for parties with the "Customer" role
 - The system tracks the full lifecycle: Reserved → Borrowed → Returned
-- One background worker for storing events retrieved from the message broker currently consumes all events as a POC. This could be enhanced to include multiple workers handling 
-messages routed per entity , ex . books.* , parties.* etc. 
+- Background worker (`RabbitMQEventConsumer`) for storing events retrieved from the message broker currently consumes all events as a POC. This could be enhanced to include multiple workers handling messages routed per entity, e.g., `books.*`, `parties.*`, etc. 

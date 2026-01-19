@@ -108,7 +108,7 @@ public class PartiesService : IPartiesService
             .LoadAsync();
 
         // Publish party created event
-        var partyCreatedEvent = new PartyEvent
+        var partyEvent = new PartyEvent
         {
             PartyId = party.Id,
             Name = party.Name,
@@ -118,7 +118,7 @@ public class PartiesService : IPartiesService
             Roles = party.PartyRoles.Select(pr => pr.Role.Name).ToList(),
         };
 
-        await _eventManager.PublishEvent("party.created", partyCreatedEvent);
+        await _eventManager.PublishEvent("party.created", partyEvent);
 
         var partyDto = new PartyDto
         {
@@ -235,7 +235,9 @@ public class PartiesService : IPartiesService
             Name = party.Name,
             Email = party.Email,
             Phone = party.Phone,
-            Address = party.Address
+            Address = party.Address,
         };
+
+        await _eventManager.PublishEvent("party.deleted", partyDeletedEvent);
     }
 }

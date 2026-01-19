@@ -6,6 +6,7 @@ namespace LibraryCoreApi.Events;
 public interface IEventStore
 {
     Task StoreEventAsync(string eventName, string routingKey, object eventData);
-    Task<List<EventDocument>> GetEventsAsync(string? eventName = null, int limit = 100);
+    Task<List<EventDocument>> GetBookEventsAsync(int limit = 100);
+    Task<List<EventDocument>> GetUserEventsAsync(int limit = 100);
     Task DeleteEventsOlderByTimespanAsync(TimeSpan timespan);
 }

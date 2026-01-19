@@ -66,24 +66,38 @@ public class MongoEventStore : IEventStore
         }
     }
 
+
     /// <summary>
-    /// Get events from the event store by name
+    /// Get book-related (book or category) events from the event store
     /// </summary>
-    /// <param name="eventName">The name of the event</param>
     /// <param name="limit">The maximum number of events to return</param>
     /// <returns>A list of EventDocument objects</returns>
-    public async Task<List<EventDocument>> GetEventsAsync(string? eventName = null, int limit = 100)
+    public async Task<List<EventDocument>> GetBookEventsAsync(int limit = 100)
     {
-        var filter = eventName != null
-            ? Builders<EventDocument>.Filter.Eq(e => e.EventName, eventName)
-            : Builders<EventDocument>.Filter.Empty;
-
+        var filter = Builders<EventDocument>.Filter.Regex(e => e.EventName, new BsonRegularExpression("^(book|category)\\..*$"));
         return await _collection
             .Find(filter)
             .SortByDescending(e => e.Timestamp)
             .Limit(limit)
             .ToListAsync();
     }
+
+    /// <summary>
+    /// Get user-related events (reservation, party, role) from the event store
+    /// </summary>
+    /// <param name="limit">The maximum number of events to return</param>
+    /// <returns>A list of EventDocument objects</returns>
+    public async Task<List<EventDocument>> GetUserEventsAsync(int limit = 100)
+    {   
+        var regex = new BsonRegularExpression("^(reservation|party|role)\\..*$");
+        var filter = Builders<EventDocument>.Filter.Regex(e => e.EventName, regex);
+        return await _collection
+            .Find(filter)
+            .SortByDescending(e => e.Timestamp)
+            .Limit(limit)
+            .ToListAsync();
+    }
+    
 
     /// <summary>
     /// Delete events from the event store older than given timespan
