@@ -52,6 +52,8 @@ builder.Services.AddScoped<IReservationsService, ReservationsService>();
 
 // Register background worker for consuming RabbitMQ events
 builder.Services.AddHostedService<RabbitMQEventConsumer>();
+// Register background worker for cleaning old events from store
+builder.Services.AddHostedService<EventCleaner>();
 
 var app = builder.Build();
 

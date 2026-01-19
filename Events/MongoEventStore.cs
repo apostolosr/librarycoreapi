@@ -72,7 +72,7 @@ public class MongoEventStore : IEventStore
     }
 
     // delete all events older than given timespan
-    public async Task DeleteEventsByTimespan(TimeSpan timespan)
+    public async Task DeleteEventsOlderByTimespanAsync(TimeSpan timespan)
     {
         var filter = Builders<EventDocument>.Filter.Lte(e => e.Timestamp, DateTime.UtcNow.Subtract(timespan));
         await _collection.DeleteManyAsync(filter);
