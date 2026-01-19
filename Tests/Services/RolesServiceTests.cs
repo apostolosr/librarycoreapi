@@ -85,7 +85,7 @@ public class RolesServiceTests : IDisposable
         // Arrange
         var createDto = new CreateRoleDto
         {
-            Name = MockHelper.RoleName,
+            Name = MockHelper.AuthorRoleName,
             Description = MockHelper.RoleDescription
         };
 
@@ -99,11 +99,14 @@ public class RolesServiceTests : IDisposable
         // Assert
         Assert.NotNull(result);
         Assert.Equal(MockHelper.RoleId, result.Id);
-        Assert.Equal(MockHelper.RoleName, result.Name);
+        Assert.Equal(MockHelper.AuthorRoleName, result.Name);
         Assert.Equal(MockHelper.RoleDescription, result.Description);
         Assert.Equal(DateTime.UtcNow.Date, result.CreatedAt.Date);
         Assert.Equal(DateTime.UtcNow.Minute, result.CreatedAt.Minute);
-        mockEventPublisher.Verify(m => m.PublishEvent(It.IsAny<string>(), It.IsAny<object>()), Times.Once);
+        mockEventPublisher.Verify(m => m.PublishEvent(
+            It.Is<string>(eventName => eventName == "role.created"),
+            It.Is<RoleEvent>(e => e.RoleId == result.Id && e.Name == result.Name)
+        ), Times.Once);
     }
 
     [Fact]
@@ -112,21 +115,22 @@ public class RolesServiceTests : IDisposable
         // Arrange
         var role = new Role
         {
-            Name = MockHelper.RoleName,
+            Name = MockHelper.AuthorRoleName,
             Description = MockHelper.RoleDescription
         };
         _dbContext.Roles.Add(role);
         await _dbContext.SaveChangesAsync();
         var createDto = new CreateRoleDto
         {
-            Name = MockHelper.RoleName,
+            Name = MockHelper.AuthorRoleName,
             Description = MockHelper.RoleDescription
         };
 
         var rolesService = new RolesService(_dbContext, new Mock<IEventPublisher>().Object);
 
         // Act, Assert
-        await Assert.ThrowsAsync<ApiException>(() => rolesService.CreateRole(createDto));
+        var exception = await Assert.ThrowsAsync<ApiException>(() => rolesService.CreateRole(createDto));
+        Assert.Equal("Role already exists", exception.Message);
     }
 
     [Fact]
@@ -146,7 +150,7 @@ public class RolesServiceTests : IDisposable
         var rolesService = new RolesService(_dbContext, mockEventPublisher.Object);
         var updateDto = new UpdateRoleDto
         {
-            Name = MockHelper.RoleName,
+            Name = MockHelper.AuthorRoleName,
             Description = MockHelper.RoleDescription
         };
 
@@ -156,11 +160,14 @@ public class RolesServiceTests : IDisposable
         // Assert
         Assert.NotNull(result);
         Assert.Equal(roleId, result.Id);
-        Assert.Equal(MockHelper.RoleName, result.Name);
+        Assert.Equal(MockHelper.AuthorRoleName, result.Name);
         Assert.Equal(MockHelper.RoleDescription, result.Description);
         Assert.Equal(DateTime.UtcNow.Date, result.CreatedAt.Date);
         Assert.Equal(DateTime.UtcNow.Minute, result.CreatedAt.Minute);
-        mockEventPublisher.Verify(m => m.PublishEvent(It.IsAny<string>(), It.IsAny<object>()), Times.Once);
+        mockEventPublisher.Verify(m => m.PublishEvent(
+            It.Is<string>(eventName => eventName == "role.updated"),
+            It.Is<RoleEvent>(e => e.RoleId == result.Id && e.Name == result.Name)
+        ), Times.Once);
     }
 
     [Fact]
@@ -171,7 +178,7 @@ public class RolesServiceTests : IDisposable
         {
             new Role
             {
-                Name = MockHelper.RoleName,
+                Name = MockHelper.AuthorRoleName,
                 Description = MockHelper.RoleDescription
             },
             new Role
@@ -193,7 +200,8 @@ public class RolesServiceTests : IDisposable
         };
 
         // Act, Assert
-        await Assert.ThrowsAsync<ApiException>(() => rolesService.UpdateRole(roleId, updateDto));
+        var exception = await Assert.ThrowsAsync<ApiException>(() => rolesService.UpdateRole(roleId, updateDto));
+        Assert.Equal("Role already exists", exception.Message);
     }
  
     [Fact]
@@ -208,12 +216,18 @@ public class RolesServiceTests : IDisposable
         _dbContext.Roles.Add(role);
         await _dbContext.SaveChangesAsync();
 
-        var rolesService = new RolesService(_dbContext, new Mock<IEventPublisher>().Object);
+        var mockEventPublisher = new Mock<IEventPublisher>();
+        mockEventPublisher.Setup(m => m.PublishEvent(It.IsAny<string>(), It.IsAny<object>())).Returns(Task.CompletedTask);
+        var rolesService = new RolesService(_dbContext, mockEventPublisher.Object);
 
         // Act
         await rolesService.DeleteRole(role.Id);
 
         // Assert
         Assert.Null(await _dbContext.Roles.FindAsync(role.Id));
+        mockEventPublisher.Verify(m => m.PublishEvent(
+            It.Is<string>(eventName => eventName == "role.deleted"),
+            It.Is<RoleEvent>(e => e.RoleId == role.Id && e.Name == role.Name)
+        ), Times.Once);
     }
 }

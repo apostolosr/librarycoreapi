@@ -78,7 +78,7 @@ public class DataContext : DbContext
             .WithOne(r => r.BookCopy)
             .HasForeignKey<Reservation>(r => r.BookCopyId)
             .IsRequired(false)
-            .OnDelete(DeleteBehavior.Restrict);
+            .OnDelete(DeleteBehavior.Cascade);
 
         // Ensure unique CopyNumber per book
         modelBuilder.Entity<BookCopy>()

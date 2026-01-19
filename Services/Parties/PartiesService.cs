@@ -152,7 +152,7 @@ public class PartiesService : IPartiesService
 
         if (roles.Count != updateDto.RoleIds.Count)
         {
-            throw new KeyNotFoundException("One or more roles not found");
+            throw new ApiException("One or more roles not found");
         }
 
         party.Name = updateDto.Name;

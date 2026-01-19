@@ -137,7 +137,10 @@ public class PartiesServiceTests : IDisposable
         Assert.Equal(new List<string> { "Author" }, result.Roles);
         Assert.Equal(DateTime.UtcNow.Date, result.CreatedAt.Date);
         Assert.Equal(DateTime.UtcNow.Minute, result.CreatedAt.Minute);
-        mockEventPublisher.Verify(m => m.PublishEvent(It.IsAny<string>(), It.IsAny<object>()), Times.Once);
+        mockEventPublisher.Verify(m => m.PublishEvent(
+            It.Is<string>(eventName => eventName == "party.created"),
+            It.Is<PartyEvent>(e => e.PartyId == result.Id && e.Name == result.Name)
+        ), Times.Once);
     }
 
     [Fact]
@@ -156,7 +159,8 @@ public class PartiesServiceTests : IDisposable
         var partiesService = new PartiesService(_dbContext, new Mock<IEventPublisher>().Object);
 
         // Act, Assert
-        await Assert.ThrowsAsync<ApiException>(() => partiesService.CreateParty(createDto));
+        var exception = await Assert.ThrowsAsync<ApiException>(() => partiesService.CreateParty(createDto));
+        Assert.Equal("One or more roles not found", exception.Message);
     }
 
     [Fact]
@@ -197,7 +201,10 @@ public class PartiesServiceTests : IDisposable
         Assert.Equal(new List<string> { "Author", "Customer" }, result.Roles);
         Assert.Equal(DateTime.UtcNow.Date, result.CreatedAt.Date);
         Assert.Equal(DateTime.UtcNow.Minute, result.CreatedAt.Minute);
-        mockEventPublisher.Verify(m => m.PublishEvent(It.IsAny<string>(), It.IsAny<object>()), Times.Once);
+        mockEventPublisher.Verify(m => m.PublishEvent(
+            It.Is<string>(eventName => eventName == "party.updated"),
+            It.Is<PartyEvent>(e => e.PartyId == result.Id && e.Name == result.Name)
+        ), Times.Once);
     }
 
      [Fact]
@@ -218,7 +225,8 @@ public class PartiesServiceTests : IDisposable
         };
 
          // Act, Assert
-         await Assert.ThrowsAsync<KeyNotFoundException>(() => partiesService.UpdateParty(MockHelper.PartyId, updateDto));
+         var exception = await Assert.ThrowsAsync<ApiException>(() => partiesService.UpdateParty(MockHelper.PartyId, updateDto));
+         Assert.Equal("One or more roles not found", exception.Message);
     }
 
     
@@ -236,12 +244,18 @@ public class PartiesServiceTests : IDisposable
         _dbContext.Parties.Add(party);
         await _dbContext.SaveChangesAsync();
 
-        var partiesService = new PartiesService(_dbContext, new Mock<IEventPublisher>().Object);
+        var mockEventPublisher = new Mock<IEventPublisher>();
+        mockEventPublisher.Setup(m => m.PublishEvent(It.IsAny<string>(), It.IsAny<object>())).Returns(Task.CompletedTask);
+        var partiesService = new PartiesService(_dbContext, mockEventPublisher.Object);
 
         // Act
         await partiesService.DeleteParty(party.Id);
 
         // Assert
         Assert.Null(await _dbContext.Parties.FindAsync(party.Id));
+        mockEventPublisher.Verify(m => m.PublishEvent(
+            It.Is<string>(eventName => eventName == "party.deleted"),
+            It.Is<PartyEvent>(e => e.PartyId == party.Id && e.Name == party.Name)
+        ), Times.Once);
     }
 }

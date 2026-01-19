@@ -78,8 +78,8 @@ All actions are published as events to a message broker (RabbitMQ) and a backgro
 - `GET /api/reservations/borrowing-visibility` - Get list of books with current borrowers
 
 ### Events
-- `GET /api/events/book?lastIndex=0&pageSize=100` - Get book (book, category) - related events
-- `GET /api/events/user?lastIndex=0&pageSize=100` - Get user (party / reservation/ role) - related events
+- `GET /api/events/book?lastIndex=0&pageSize=100` - Get book (book, category) - related events (with pagination support)
+- `GET /api/events/user?lastIndex=0&pageSize=100` - Get user (party / reservation/ role) - related events  (with pagination support)
 
 
 ## Setup Instructions

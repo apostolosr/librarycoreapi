@@ -105,7 +105,10 @@ public class CategoriesServiceTests : IDisposable
         Assert.Equal(0, result.BookCount);
         Assert.Equal(DateTime.UtcNow.Date, result.CreatedAt.Date);
         Assert.Equal(DateTime.UtcNow.Minute, result.CreatedAt.Minute);
-        mockEventPublisher.Verify(m => m.PublishEvent(It.IsAny<string>(), It.IsAny<object>()), Times.Once);
+        mockEventPublisher.Verify(m => m.PublishEvent(
+            It.Is<string>(eventName => eventName == "category.created"),
+            It.Is<CategoryEvent>(e => e.CategoryId == result.Id && e.Name == result.Name)
+        ), Times.Once);
     }
 
     [Fact]
@@ -130,7 +133,10 @@ public class CategoriesServiceTests : IDisposable
         Assert.NotNull(result);
         Assert.Equal(updateDto.Name, result.Name);
         Assert.Equal(0, result.BookCount);
-        mockEventPublisher.Verify(m => m.PublishEvent(It.IsAny<string>(), It.IsAny<object>()), Times.Once);
+        mockEventPublisher.Verify(m => m.PublishEvent(
+            It.Is<string>(eventName => eventName == "category.updated"),
+            It.Is<CategoryEvent>(e => e.CategoryId == result.Id && e.Name == result.Name)
+        ), Times.Once);
     }
 
     [Fact]
@@ -144,12 +150,18 @@ public class CategoriesServiceTests : IDisposable
         _dbContext.Categories.Add(category);
         await _dbContext.SaveChangesAsync();
 
-        var categoriesService = new CategoriesService(_dbContext, new Mock<IEventPublisher>().Object);
+        var mockEventPublisher = new Mock<IEventPublisher>();
+        mockEventPublisher.Setup(m => m.PublishEvent(It.IsAny<string>(), It.IsAny<object>())).Returns(Task.CompletedTask);
+        var categoriesService = new CategoriesService(_dbContext, mockEventPublisher.Object);
 
         // Act
         await categoriesService.DeleteCategory(category.Id);
 
         // Assert
         Assert.Null(await _dbContext.Categories.FindAsync(category.Id));
+        mockEventPublisher.Verify(m => m.PublishEvent(
+            It.Is<string>(eventName => eventName == "category.deleted"),
+            It.Is<CategoryEvent>(e => e.CategoryId == category.Id && e.Name == category.Name)
+        ), Times.Once);
     }
 }

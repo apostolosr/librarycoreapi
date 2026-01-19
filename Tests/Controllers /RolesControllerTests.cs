@@ -71,7 +71,7 @@ public class RolesControllerTests
         var okResult = Assert.IsType<OkObjectResult>(result.Result);
         var role = Assert.IsType<RoleDto>(okResult.Value);
         Assert.Equal(MockHelper.RoleId, role.Id);
-        Assert.Equal(MockHelper.RoleName, role.Name);
+        Assert.Equal(MockHelper.AuthorRoleName, role.Name);
         Assert.Equal(200, okResult.StatusCode);
         _mockRolesService.Verify(s => s.GetRole(MockHelper.RoleId), Times.Once);
     }
@@ -82,7 +82,7 @@ public class RolesControllerTests
         // Arrange
         var createDto = new CreateRoleDto
         {
-            Name = MockHelper.RoleName,
+            Name = MockHelper.AuthorRoleName,
             Description = MockHelper.RoleDescription
         };
         _mockRolesService.Setup(s => s.CreateRole(It.IsAny<CreateRoleDto>())).ReturnsAsync(MockHelper.GetMockRoleDto());
@@ -94,10 +94,10 @@ public class RolesControllerTests
         var createdAtActionResult = Assert.IsType<CreatedAtActionResult>(result.Result);
         var role = Assert.IsType<RoleDto>(createdAtActionResult.Value);
         Assert.Equal(MockHelper.RoleId, role.Id);
-        Assert.Equal(MockHelper.RoleName, role.Name);
+        Assert.Equal(MockHelper.AuthorRoleName, role.Name);
         Assert.Equal(201, createdAtActionResult.StatusCode);
         Assert.Equal(nameof(RolesController.GetRole), createdAtActionResult.ActionName);
-        _mockRolesService.Verify(s => s.CreateRole(It.Is<CreateRoleDto>(d => d.Name == MockHelper.RoleName)), Times.Once);
+        _mockRolesService.Verify(s => s.CreateRole(It.Is<CreateRoleDto>(d => d.Name == MockHelper.AuthorRoleName)), Times.Once);
     }
 
 
@@ -119,7 +119,7 @@ public class RolesControllerTests
         var okResult = Assert.IsType<OkObjectResult>(result.Result);
         var role = Assert.IsType<RoleDto>(okResult.Value);
         Assert.Equal(MockHelper.RoleId, role.Id);
-        Assert.Equal(MockHelper.RoleName, role.Name);
+        Assert.Equal(MockHelper.AuthorRoleName, role.Name);
         Assert.Equal(200, okResult.StatusCode);
         _mockRolesService.Verify(s => s.UpdateRole(MockHelper.RoleId, It.IsAny<UpdateRoleDto>()), Times.Once);
     }

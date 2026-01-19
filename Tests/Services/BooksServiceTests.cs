@@ -7,6 +7,7 @@ using LibraryCoreApi.Events;
 using Moq;
 using LibraryCoreApi.DTOs;
 using LibraryCoreApi.Errors;
+using DnsClient.Protocol;
 
 namespace LibraryCoreApi.Tests.Services;
 
@@ -39,7 +40,24 @@ public class BooksServiceTests : IDisposable
     public async Task TestGetBooks()
     {
         // Arrange
+
+        var role = MockHelper.GetMockRole();
+        _dbContext.Roles.Add(role);
+
+        var partyRole = MockHelper.GetMockPartyRole();
+        partyRole.Role = role;
+        _dbContext.PartyRoles.Add(partyRole);
+
+        var party = MockHelper.GetMockParty();
+        party.PartyRoles.Add(partyRole);
+        _dbContext.Parties.Add(party);
+
+        var category = MockHelper.GetMockCategory();
+        _dbContext.Categories.Add(category);
+
         var book = MockHelper.GetMockBook();
+        book.Author = party;
+        book.Category = category;
         _dbContext.Books.Add(book);
         await _dbContext.SaveChangesAsync();
 
@@ -65,7 +83,29 @@ public class BooksServiceTests : IDisposable
     public async Task TestGetBookByBookId()
     {
         // Arrange
+        var role = new Role 
+        { 
+            Id = MockHelper.RoleId, 
+            Name = MockHelper.CustomerRoleName, 
+            Description = MockHelper.RoleDescription, 
+            CreatedAt = DateTime.UtcNow 
+        };
+        _dbContext.Roles.Add(role);
+
+        var partyRole = MockHelper.GetMockPartyRole();
+        partyRole.Role = role;
+        _dbContext.PartyRoles.Add(partyRole);
+
+        var party = MockHelper.GetMockParty();
+        party.PartyRoles.Add(partyRole);
+        _dbContext.Parties.Add(party);
+
+        var category = MockHelper.GetMockCategory();
+        _dbContext.Categories.Add(category);
+
         var book = MockHelper.GetMockBook();
+        book.Author = party;
+        book.Category = category;
         _dbContext.Books.Add(book);
         await _dbContext.SaveChangesAsync();
 
@@ -110,40 +150,204 @@ public class BooksServiceTests : IDisposable
         var booksService = new BooksService(_dbContext, mockEventPublisher.Object);
 
         // Act, Assert
-        await Assert.ThrowsAsync<KeyNotFoundException>(() => booksService.CreateBook(createDto));
+        var exception = await Assert.ThrowsAsync<KeyNotFoundException>(() => booksService.CreateBook(createDto));
+        Assert.Equal("Author not found", exception.Message);
     }
 
-    // [Fact]
-    // public async Task TestCreateBookPartyDoesNotHaveAuthorRole()
-    // {
-    //     // Arrange
-    //     var party = MockHelper.GetMockParty();
-    //     _dbContext.Parties.Add(party);
-    //     await _dbContext.SaveChangesAsync();
-    //     var createDto = new CreateBookDto
-    //     {
-    //         Title = "Test Book",
-    //         ISBN = "1234567890",
-    //         Description = "Test Description",
-    //         AuthorId = MockHelper.AuthorId,
-    //         CategoryId = MockHelper.CategoryId,
-    //         PublishedDate = MockHelper.PublishedDate,
-    //         NumberOfCopies = 1
-    //     };
-    //     var mockEventPublisher = new Mock<IEventPublisher>();   
-    //     mockEventPublisher.Setup(m => m.PublishEvent(It.IsAny<string>(), It.IsAny<object>())).Returns(Task.CompletedTask);
-    //     var booksService = new BooksService(_dbContext, mockEventPublisher.Object);
+    [Fact]
+    public async Task TestCreateBookPartyDoesNotHaveAuthorRole()
+    {
+        // Arrange
+        var party = MockHelper.GetMockParty();
 
-    //     // Act, Assert
-    //     await Assert.ThrowsAsync<ApiException>(() => booksService.CreateBook(createDto));
-    // }
+        var role = MockHelper.GetMockRole();
+        role.Name = MockHelper.CustomerRoleName;
+        _dbContext.Roles.Add(role);
+
+        var partyRole = MockHelper.GetMockPartyRole();
+        partyRole.Role = role;
+        _dbContext.PartyRoles.Add(partyRole);
+
+        party.PartyRoles.Add(partyRole);
+        _dbContext.Parties.Add(party);
+        
+        await _dbContext.SaveChangesAsync();
+
+        var createDto = new CreateBookDto
+        {
+            Title = "Test Book",
+            ISBN = "1234567890",
+            Description = "Test Description",
+            AuthorId = MockHelper.AuthorId,
+            CategoryId = MockHelper.CategoryId,
+            PublishedDate = MockHelper.PublishedDate,
+            NumberOfCopies = 1
+        };
+        var mockEventPublisher = new Mock<IEventPublisher>();   
+        mockEventPublisher.Setup(m => m.PublishEvent(It.IsAny<string>(), It.IsAny<object>())).Returns(Task.CompletedTask);
+        var booksService = new BooksService(_dbContext, mockEventPublisher.Object);
+
+        // Act, Assert
+        var exception = await Assert.ThrowsAsync<ApiException>(() => booksService.CreateBook(createDto));
+        Assert.Equal("Party does not have Author role", exception.Message);
+    }
+
+    [Fact]
+    public async Task TestCreateBookPartyCategoryDoesNotExist()
+    {
+        // Arrange
+        var party = MockHelper.GetMockParty();
+
+        var role = MockHelper.GetMockRole();
+        _dbContext.Roles.Add(role);
+
+        var partyRole = MockHelper.GetMockPartyRole();
+        partyRole.Role = role;
+        _dbContext.PartyRoles.Add(partyRole);
+        
+        party.PartyRoles.Add(partyRole);
+        _dbContext.Parties.Add(party);
+        
+        await _dbContext.SaveChangesAsync();
+
+        var createDto = new CreateBookDto
+        {
+            Title = "Test Book",
+            ISBN = "1234567890",
+            Description = "Test Description",
+            AuthorId = MockHelper.AuthorId,
+            CategoryId = MockHelper.CategoryId,
+            PublishedDate = MockHelper.PublishedDate,
+            NumberOfCopies = 1
+        };
+        var mockEventPublisher = new Mock<IEventPublisher>();   
+        mockEventPublisher.Setup(m => m.PublishEvent(It.IsAny<string>(), It.IsAny<object>())).Returns(Task.CompletedTask);
+        var booksService = new BooksService(_dbContext, mockEventPublisher.Object);
+
+        // Act, Assert
+        var exception = await Assert.ThrowsAsync<KeyNotFoundException>(() => booksService.CreateBook(createDto));
+        Assert.Equal("Category not found", exception.Message);
+    }
+
+    [Fact]
+    public async Task TestCreateBookISBNAlreadyExists()
+    {
+        // Arrange
+        var category = MockHelper.GetMockCategory();
+        _dbContext.Categories.Add(category);
+        
+        var role = MockHelper.GetMockRole();
+        _dbContext.Roles.Add(role);
+
+        var partyRole = MockHelper.GetMockPartyRole();
+        partyRole.Role = role;
+        _dbContext.PartyRoles.Add(partyRole);
+
+        var party = MockHelper.GetMockParty();
+        party.PartyRoles.Add(partyRole);
+        _dbContext.Parties.Add(party);
+
+        var book = MockHelper.GetMockBook();
+        _dbContext.Books.Add(book);
+        
+        await _dbContext.SaveChangesAsync();
+
+        var createDto = new CreateBookDto
+        {
+            Title = "Test Book",
+            ISBN = MockHelper.ISBN,
+            Description = "Test Description",
+            AuthorId = MockHelper.AuthorId,
+            CategoryId = MockHelper.CategoryId,
+            PublishedDate = MockHelper.PublishedDate,
+            NumberOfCopies = 1
+        };
+        var mockEventPublisher = new Mock<IEventPublisher>();   
+        mockEventPublisher.Setup(m => m.PublishEvent(It.IsAny<string>(), It.IsAny<object>())).Returns(Task.CompletedTask);
+        var booksService = new BooksService(_dbContext, mockEventPublisher.Object);
+
+        // Act, Assert
+        var exception = await Assert.ThrowsAsync<ApiException>(() => booksService.CreateBook(createDto));
+        Assert.Equal("Book with this ISBN already exists", exception.Message);
+    }
+
+     [Fact]
+    public async Task TestCreateBookSuccessfully()
+    {
+        // Arrange
+        var category = MockHelper.GetMockCategory();
+        _dbContext.Categories.Add(category);
+
+        var role = MockHelper.GetMockRole();
+        _dbContext.Roles.Add(role);
+
+        var partyRole = MockHelper.GetMockPartyRole();
+        partyRole.Role = role;
+        _dbContext.PartyRoles.Add(partyRole);
+
+        var party = MockHelper.GetMockParty();
+        party.PartyRoles.Add(partyRole);
+        _dbContext.Parties.Add(party);
+ 
+        await _dbContext.SaveChangesAsync();
+
+        var createDto = new CreateBookDto
+        {
+            Title = "Test Book",
+            ISBN = MockHelper.ISBN,
+            Description = "Test Description",
+            AuthorId = MockHelper.AuthorId,
+            CategoryId = MockHelper.CategoryId,
+            PublishedDate = MockHelper.PublishedDate,
+            NumberOfCopies = 1
+        };
+        var mockEventPublisher = new Mock<IEventPublisher>();   
+        mockEventPublisher.Setup(m => m.PublishEvent(It.IsAny<string>(), It.IsAny<object>())).Returns(Task.CompletedTask);
+        var booksService = new BooksService(_dbContext, mockEventPublisher.Object);
+
+        // Act
+        var result = await booksService.CreateBook(createDto);
+
+        // Assert
+        Assert.NotNull(result);
+        Assert.Equal(createDto.Title, result.Title);
+        Assert.Equal(createDto.ISBN, result.ISBN);
+        Assert.Equal(createDto.Description, result.Description);
+        Assert.Equal(createDto.CategoryId, result.CategoryId);
+        Assert.Equal(createDto.PublishedDate, result.PublishedDate);
+        Assert.Equal(createDto.NumberOfCopies, result.TotalCopies);
+        Assert.Equal(createDto.NumberOfCopies, result.AvailableCopies);
+        Assert.Equal(DateTime.UtcNow.Date, result.CreatedAt.Date);
+        Assert.Equal(DateTime.UtcNow.Minute, result.CreatedAt.Minute);
+        mockEventPublisher.Verify(m => m.PublishEvent(
+            It.Is<string>(eventName => eventName == "book.created"),
+            It.Is<BookEvent>(e => e.BookId == result.Id && e.Title == result.Title && e.CategoryId == result.CategoryId)
+        ), Times.Once);
+    }
 
     [Fact]
     public async Task TestUpdateBook()
     {
         // Arrange
+        var category = MockHelper.GetMockCategory();
+        _dbContext.Categories.Add(category);
+        
+        var role = MockHelper.GetMockRole();
+        _dbContext.Roles.Add(role);
+
+        var partyRole = MockHelper.GetMockPartyRole();
+        partyRole.Role = role;
+        _dbContext.PartyRoles.Add(partyRole);
+
+        var party = MockHelper.GetMockParty();
+        party.PartyRoles.Add(partyRole);
+        _dbContext.Parties.Add(party);
+
         var book = MockHelper.GetMockBook();
+        book.Category = category;
+        book.Author = party;
         _dbContext.Books.Add(book);
+
         await _dbContext.SaveChangesAsync();
         var mockEventPublisher = new Mock<IEventPublisher>();
         mockEventPublisher.Setup(m => m.PublishEvent(It.IsAny<string>(), It.IsAny<object>())).Returns(Task.CompletedTask);
@@ -169,7 +373,10 @@ public class BooksServiceTests : IDisposable
         Assert.Equal(book.Copies.Count(c => c.IsAvailable), result.AvailableCopies);
         Assert.Equal(DateTime.UtcNow.Date, result.CreatedAt.Date);
         Assert.Equal(DateTime.UtcNow.Minute, result.CreatedAt.Minute);
-        mockEventPublisher.Verify(m => m.PublishEvent(It.IsAny<string>(), It.IsAny<object>()), Times.Once);
+        mockEventPublisher.Verify(m => m.PublishEvent(
+            It.Is<string>(eventName => eventName == "book.updated"),
+            It.Is<BookEvent>(e => e.BookId == book.Id && e.Title == updateDto.Title && e.CategoryId == updateDto.CategoryId)
+        ), Times.Once);
     }
 
     [Fact]
@@ -180,13 +387,19 @@ public class BooksServiceTests : IDisposable
         _dbContext.Books.Add(book);
         await _dbContext.SaveChangesAsync();
 
-        var booksService = new BooksService(_dbContext, new Mock<IEventPublisher>().Object);
+        var mockEventPublisher = new Mock<IEventPublisher>();
+        mockEventPublisher.Setup(m => m.PublishEvent(It.IsAny<string>(), It.IsAny<object>())).Returns(Task.CompletedTask);
+        var booksService = new BooksService(_dbContext, mockEventPublisher.Object);
 
         // Act
         await booksService.DeleteBook(book.Id);
 
         // Assert
         Assert.Null(await _dbContext.Books.FindAsync(book.Id));
+        mockEventPublisher.Verify(m => m.PublishEvent(
+            It.Is<string>(eventName => eventName == "book.deleted"),
+            It.Is<BookEvent>(e => e.BookId == book.Id && e.Title == book.Title && e.CategoryId == book.CategoryId)
+        ), Times.Once);
     }
 
     [Fact]
@@ -194,6 +407,7 @@ public class BooksServiceTests : IDisposable
     {
         // Arrange
         var book = MockHelper.GetMockBook();
+        book.Copies.Add(MockHelper.GetMockBookCopy());
         book.Copies.First().IsAvailable = false;
         _dbContext.Books.Add(book);
         await _dbContext.SaveChangesAsync();
@@ -201,6 +415,7 @@ public class BooksServiceTests : IDisposable
         var booksService = new BooksService(_dbContext, new Mock<IEventPublisher>().Object);
 
         // Act, Assert
-        await Assert.ThrowsAsync<ApiException>(() => booksService.DeleteBook(book.Id));
+        var exception = await Assert.ThrowsAsync<ApiException>(() => booksService.DeleteBook(book.Id));
+        Assert.Equal("Cannot delete book with borrowed copies", exception.Message);
     }
 }

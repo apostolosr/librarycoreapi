@@ -24,7 +24,8 @@ namespace LibraryCoreApi.Tests
         internal const string Address = "123 Main St, Anytown, USA";
 
         internal const int RoleId = 1;
-        internal const string RoleName = "Author";
+        internal const string AuthorRoleName = "Author";
+        internal const string CustomerRoleName = "Customer";
         internal const string RoleDescription = "A person who writes books";
 
         internal const int ReservationId = 1;
@@ -79,7 +80,7 @@ namespace LibraryCoreApi.Tests
             return new RoleDto 
             { 
                 Id = RoleId, 
-                Name = RoleName, 
+                Name = AuthorRoleName, 
                 Description = RoleDescription, 
                 CreatedAt = DateTime.UtcNow
             };
@@ -145,8 +146,7 @@ namespace LibraryCoreApi.Tests
                 Email = Email, 
                 Phone = Phone, 
                 Address = Address, 
-                CreatedAt = DateTime.UtcNow,
-                PartyRoles = new List<PartyRole> { GetMockPartyRole() }
+                CreatedAt = DateTime.UtcNow
             };
         }
 
@@ -155,7 +155,7 @@ namespace LibraryCoreApi.Tests
             return new Role 
             { 
                 Id = RoleId, 
-                Name = RoleName, 
+                Name = AuthorRoleName, 
                 Description = RoleDescription, 
                 CreatedAt = DateTime.UtcNow
             };
@@ -192,10 +192,7 @@ namespace LibraryCoreApi.Tests
                 ISBN = ISBN, 
                 Description = Description, 
                 PublishedDate = PublishedDate, 
-                CreatedAt = DateTime.UtcNow,
-                Author = GetMockParty(),
-                Category = GetMockCategory(),
-                Copies = new List<BookCopy> { GetMockBookCopy() }
+                CreatedAt = DateTime.UtcNow
             };
         }
 
@@ -208,6 +205,21 @@ namespace LibraryCoreApi.Tests
                 CopyNumber = CopyNumber, 
                 IsAvailable = true, 
                 CreatedAt = DateTime.UtcNow
+            };
+        }
+
+        internal static Reservation GetMockReservation()
+        {
+            return new Reservation 
+            { 
+                Id = ReservationId, 
+                BookCopyId = BookCopyId, 
+                CustomerId = CustomerId, 
+                ReservedAt = ReservedAt, 
+                BorrowedAt = BorrowedAt, 
+                ReturnedAt = ReturnedAt, 
+                DueDate = DueDate, 
+                Status = ReservationStatus.Reserved,
             };
         }
     }
