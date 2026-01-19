@@ -15,16 +15,16 @@ public class EventsController : ControllerBase
     }
 
     [HttpGet("book")]
-    public async Task<ActionResult<IEnumerable<EventDto>>> GetBookEvents()
+    public async Task<ActionResult<EventLastIndexDto>> GetBookEvents([FromQuery] int lastIndex = 0, [FromQuery] int pageSize = 100)
     {
-        var events = await _eventsService.GetBookEvents();
-        return Ok(events);
+        var result = await _eventsService.GetBookEvents(lastIndex, pageSize);
+        return Ok(result);
     }
 
     [HttpGet("user")]
-    public async Task<ActionResult<IEnumerable<EventDto>>> GetUserEvents()
+    public async Task<ActionResult<EventLastIndexDto>> GetUserEvents([FromQuery] int lastIndex = 0, [FromQuery] int pageSize = 100)
     {
-        var events = await _eventsService.GetUserEvents();
-        return Ok(events);
+        var result = await _eventsService.GetUserEvents(lastIndex, pageSize);
+        return Ok(result);
     }
 }

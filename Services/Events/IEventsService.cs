@@ -4,6 +4,6 @@ namespace LibraryCoreApi.Services.Events;
 
 public interface IEventsService
 {
-    Task<IEnumerable<EventDto>> GetBookEvents();
-    Task<IEnumerable<EventDto>> GetUserEvents();
+    Task<EventLastIndexDto> GetBookEvents(int lastIndex = 0, int pageSize = 100);
+    Task<EventLastIndexDto> GetUserEvents(int lastIndex = 0, int pageSize = 100);
 }

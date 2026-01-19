@@ -89,7 +89,7 @@ public class RabbitMQEventConsumer : BackgroundService
                 _logger.LogInformation("Received event: {EventName} with routing key: {RoutingKey}", eventName, routingKey);
 
                 // Parse the event data
-                var eventData = JsonSerializer.Deserialize<JsonElement>(message); // TODO check whether there is no need to deserialize since StoreEventAsync is serializing again
+                var eventData = JsonSerializer.Deserialize<JsonElement>(message);
 
                 // Store to MongoDB
                 await _eventStore.StoreEventAsync(eventName, routingKey, eventData);

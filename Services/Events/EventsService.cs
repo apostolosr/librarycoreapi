@@ -12,27 +12,39 @@ public class EventsService : IEventsService
         _eventStore = eventStore;
     }
 
-    public async Task<IEnumerable<EventDto>> GetBookEvents()
+    public async Task<EventLastIndexDto> GetBookEvents(int lastIndex = 0, int pageSize = 100)
     {
-        var events = await _eventStore.GetBookEventsAsync();
-        return events.Select(e => new EventDto 
+        var events = await _eventStore.GetBookEventsAsync(lastIndex, pageSize);
+        var eventDtos = events.Select(e => new EventDto 
         {
             EventName = e.EventName,
             EventData = e.EventData.ToString(),
             Timestamp = e.Timestamp,
             ProcessedAt = e.ProcessedAt
-        });
+        }).ToList();
+
+        return new EventLastIndexDto
+        {
+            LastIndex = lastIndex + eventDtos.Count,
+            Events = eventDtos
+        };
     }
 
-    public async Task<IEnumerable<EventDto>> GetUserEvents()
+    public async Task<EventLastIndexDto> GetUserEvents(int lastIndex = 0, int pageSize = 100)
     {
-        var events = await _eventStore.GetUserEventsAsync();
-        return events.Select(e => new EventDto 
+        var events = await _eventStore.GetUserEventsAsync(lastIndex, pageSize);
+        var eventDtos = events.Select(e => new EventDto 
         {
             EventName = e.EventName,
             EventData = e.EventData.ToString(),
             Timestamp = e.Timestamp,
             ProcessedAt = e.ProcessedAt
-        });
+        }).ToList();
+
+        return new EventLastIndexDto
+        {
+            LastIndex = lastIndex + eventDtos.Count,
+            Events = eventDtos
+        };
     }
 }

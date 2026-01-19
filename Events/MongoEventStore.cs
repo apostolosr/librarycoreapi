@@ -70,31 +70,35 @@ public class MongoEventStore : IEventStore
     /// <summary>
     /// Get book-related (book or category) events from the event store
     /// </summary>
-    /// <param name="limit">The maximum number of events to return</param>
+    /// <param name="lastIndex">The index to start from (for pagination)</param>
+    /// <param name="pageSize">The maximum number of events to return</param>
     /// <returns>A list of EventDocument objects</returns>
-    public async Task<List<EventDocument>> GetBookEventsAsync(int limit = 100)
+    public async Task<List<EventDocument>> GetBookEventsAsync(int lastIndex = 0, int pageSize = 100)
     {
         var filter = Builders<EventDocument>.Filter.Regex(e => e.EventName, new BsonRegularExpression("^(book|category)\\..*$"));
         return await _collection
             .Find(filter)
             .SortByDescending(e => e.Timestamp)
-            .Limit(limit)
+            .Skip(lastIndex)
+            .Limit(pageSize)
             .ToListAsync();
     }
 
     /// <summary>
     /// Get user-related events (reservation, party, role) from the event store
     /// </summary>
-    /// <param name="limit">The maximum number of events to return</param>
+    /// <param name="lastIndex">The index to start from (for pagination)</param>
+    /// <param name="pageSize">The maximum number of events to return</param>
     /// <returns>A list of EventDocument objects</returns>
-    public async Task<List<EventDocument>> GetUserEventsAsync(int limit = 100)
+    public async Task<List<EventDocument>> GetUserEventsAsync(int lastIndex = 0, int pageSize = 100)
     {   
         var regex = new BsonRegularExpression("^(reservation|party|role)\\..*$");
         var filter = Builders<EventDocument>.Filter.Regex(e => e.EventName, regex);
         return await _collection
             .Find(filter)
             .SortByDescending(e => e.Timestamp)
-            .Limit(limit)
+            .Skip(lastIndex)
+            .Limit(pageSize)
             .ToListAsync();
     }
     
