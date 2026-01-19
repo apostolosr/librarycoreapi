@@ -4,6 +4,9 @@ using System.Text.Json;
 
 namespace LibraryCoreApi.Events;
 
+/// <summary>
+/// RabbitMQEventPublisher class to publish events to RabbitMQ
+/// </summary>
 public class RabbitMQEventPubliser : IEventPublisher, IAsyncDisposable
 {
     private IConnection? _connection;
@@ -47,6 +50,13 @@ public class RabbitMQEventPubliser : IEventPublisher, IAsyncDisposable
         );
     }
 
+    /// <summary>
+    /// Publish event to RabbitMQ
+    /// </summary>
+    /// <typeparam name="T">The type of the event data</typeparam>
+    /// <param name="eventName">The name of the event</param>
+    /// <param name="eventData">The event data</param>
+    /// <returns>A task representing the asynchronous operation</returns>
     public async Task PublishEvent<T>(string eventName, T eventData) where T : class
     {
         if (_channel == null)

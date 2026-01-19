@@ -1,5 +1,8 @@
 namespace LibraryCoreApi.DTOs;
 
+/// <summary>
+/// BookDto class to represent a book
+/// </summary>
 public class BookDto
 {
     public int Id { get; set; }
@@ -17,6 +20,9 @@ public class BookDto
     public DateTime CreatedAt { get; set; }
 }
 
+/// <summary>
+/// CreateBookDto class to represent a book to be created
+/// </summary>
 public class CreateBookDto
 {
     public string Title { get; set; } = string.Empty;
@@ -29,6 +35,9 @@ public class CreateBookDto
     public int NumberOfCopies { get; set; } = 1;
 }
 
+/// <summary>
+/// UpdateBookDto class to represent a book to be updated
+/// </summary>
 public class UpdateBookDto
 {
     public string Title { get; set; } = string.Empty;

@@ -5,6 +5,9 @@ using System.Text.Json;
 
 namespace LibraryCoreApi.Events;
 
+/// <summary>
+/// RabbitMQEventConsumer background service to consume events from RabbitMQ
+/// </summary>
 public class RabbitMQEventConsumer : BackgroundService
 {
     private readonly IConnection _connection;

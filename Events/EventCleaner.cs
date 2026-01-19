@@ -1,5 +1,8 @@
 namespace LibraryCoreApi.Events;
 
+/// <summary>
+/// EventCleaner background service to clean events from the event store
+/// </summary>
 public class EventCleaner : BackgroundService
 {
     private readonly IEventStore _eventStore;

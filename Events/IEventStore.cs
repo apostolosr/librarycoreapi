@@ -1,5 +1,8 @@
 namespace LibraryCoreApi.Events;
 
+/// <summary>
+/// IEventStore interface to store events in the event store
+/// </summary>
 public interface IEventStore
 {
     Task StoreEventAsync(string eventName, string routingKey, object eventData);

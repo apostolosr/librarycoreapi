@@ -1,5 +1,8 @@
 namespace LibraryCoreApi.DTOs;
 
+/// <summary>
+/// PartyDto class to represent a party
+/// </summary>
 public class PartyDto
 {
     public int Id { get; set; }
@@ -11,6 +14,9 @@ public class PartyDto
     public DateTime CreatedAt { get; set; }
 }
 
+/// <summary>
+/// CreatePartyDto class to represent a party to be created
+/// </summary>
 public class CreatePartyDto
 {
     public string Name { get; set; } = string.Empty;
@@ -20,6 +26,9 @@ public class CreatePartyDto
     public List<int> RoleIds { get; set; } = [];
 }
 
+/// <summary>
+/// UpdatePartyDto class to represent a party to be updated
+/// </summary>
 public class UpdatePartyDto
 {
     public string Name { get; set; } = string.Empty;

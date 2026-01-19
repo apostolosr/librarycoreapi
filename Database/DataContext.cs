@@ -4,8 +4,16 @@ using LibraryCoreApi.Entities;
 
 namespace LibraryCoreApi.Database;
 
+/// <summary>
+/// DataContext class to manage the database context
+/// </summary>
+/// <param name="options">The database context options</param>
 public class DataContext : DbContext
 {
+    /// <summary>
+    /// Constructor for the DataContext class
+    /// </summary>
+    /// <param name="options">The database context options</param>
     public DataContext(DbContextOptions<DataContext> options) : base(options)
     {
     }

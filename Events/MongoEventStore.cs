@@ -4,6 +4,9 @@ using System.Text.Json;
 
 namespace LibraryCoreApi.Events;
 
+/// <summary>
+/// MongoEventStore class to store events in MongoDB
+/// </summary>
 public class MongoEventStore : IEventStore
 {
     private readonly IMongoCollection<EventDocument> _collection;
@@ -29,7 +32,13 @@ public class MongoEventStore : IEventStore
         _collection.Indexes.CreateOne(new CreateIndexModel<EventDocument>(indexKeys, indexOptions));
     }
 
-    // store event
+    /// <summary>
+    /// Store event in the event store
+    /// </summary>
+    /// <param name="eventName"></param>
+    /// <param name="routingKey"></param>
+    /// <param name="eventData"></param>
+    /// <returns></returns>
     public async Task StoreEventAsync(string eventName, string routingKey, object eventData)
     {
         try
@@ -57,7 +66,12 @@ public class MongoEventStore : IEventStore
         }
     }
 
-    // get events by name
+    /// <summary>
+    /// Get events from the event store by name
+    /// </summary>
+    /// <param name="eventName">The name of the event</param>
+    /// <param name="limit">The maximum number of events to return</param>
+    /// <returns>A list of EventDocument objects</returns>
     public async Task<List<EventDocument>> GetEventsAsync(string? eventName = null, int limit = 100)
     {
         var filter = eventName != null
@@ -71,7 +85,11 @@ public class MongoEventStore : IEventStore
             .ToListAsync();
     }
 
-    // delete all events older than given timespan
+    /// <summary>
+    /// Delete events from the event store older than given timespan
+    /// </summary>
+    /// <param name="timespan">The timespan to delete events older than</param>
+    /// <returns>A task representing the asynchronous operation</returns>
     public async Task DeleteEventsOlderByTimespanAsync(TimeSpan timespan)
     {
         var filter = Builders<EventDocument>.Filter.Lte(e => e.Timestamp, DateTime.UtcNow.Subtract(timespan));

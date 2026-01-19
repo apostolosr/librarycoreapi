@@ -3,8 +3,16 @@ using LibraryCoreApi.Entities;
 
 namespace LibraryCoreApi.Database;
 
+/// <summary>
+/// Database seeder class to seed the database with initial data
+/// </summary>
 public static class DatabaseSeeder
 {
+    /// <summary>
+    /// Seed the database with initial roles, categories and a party
+    /// </summary>
+    /// <param name="context">The database context</param>
+    /// <returns>A task representing the asynchronous operation</returns>
     public static async Task SeedAsync(DataContext context)
     {
         // Seed Roles
