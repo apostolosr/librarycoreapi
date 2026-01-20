@@ -95,14 +95,12 @@ All actions are published as events to a message broker (RabbitMQ) and a backgro
     make dev
    ```
 
-2a. **Create and apply database migrations:**
-   # In a new terminal
+2a. **In a new terminal create and apply database migrations:**
    ```bash
     make migrate 
    ```
 
-2b (optional). **Seed database:**
-   # In a new terminal
+2b (optional). **Seed database (with basic data before adding a book: roles, categories, party):**
    ```bash
     make seed 
    ```
@@ -216,17 +214,17 @@ POST /api/reservations/borrow
 }
 ```
 
-### 7. Return a Book
+### 7. Get Borrowing Visibility
+```bash
+GET /api/reservations/borrowing-visibility
+```
+
+### 8. Return a Book
 ```bash
 POST /api/reservations/return
 {
   "reservationId": 1
 }
-```
-
-### 8. Get Borrowing Visibility
-```bash
-GET /api/reservations/borrowing-visibility
 ```
 
 ## Production Deployment (not tested, merely serving as a template)
