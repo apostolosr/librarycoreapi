@@ -41,13 +41,14 @@ public class PartiesServiceTests : IDisposable
         // Arrange
         var role = MockHelper.GetMockRole();
         _dbContext.Roles.Add(role);
-        await _dbContext.SaveChangesAsync();
+  
         var parties = new List<Party>
         {
             new Party { Name = "Test Party 1", Email = "test1@test.com", Phone = "1234567890", Address = "123 Test St, Test City, Test Country", PartyRoles = new List<PartyRole> { new PartyRole { RoleId = 1 } } },
             new Party { Name = "Test Party 2", Email = "test2@test.com", Phone = "1234567890", Address = "123 Test St, Test City, Test Country", PartyRoles = new List<PartyRole> { new PartyRole { RoleId = 1 } } }
         };
         _dbContext.Parties.AddRange(parties);
+
         await _dbContext.SaveChangesAsync();
 
         var partiesService = new PartiesService(_dbContext, new Mock<IEventPublisher>().Object);
@@ -68,9 +69,10 @@ public class PartiesServiceTests : IDisposable
         // Arrange
         var role = MockHelper.GetMockRole();
         _dbContext.Roles.Add(role);
-        await _dbContext.SaveChangesAsync();
+
         var party = MockHelper.GetMockParty();
         _dbContext.Parties.Add(party);
+        
         await _dbContext.SaveChangesAsync();
 
         var partiesService = new PartiesService(_dbContext, new Mock<IEventPublisher>().Object);
@@ -242,6 +244,7 @@ public class PartiesServiceTests : IDisposable
         _dbContext.Roles.AddRange(roles);
         var party = MockHelper.GetMockParty();
         _dbContext.Parties.Add(party);
+        
         await _dbContext.SaveChangesAsync();
 
         var mockEventPublisher = new Mock<IEventPublisher>();
