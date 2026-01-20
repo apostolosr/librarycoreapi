@@ -1,7 +1,8 @@
 # Library Management System API
 
-A comprehensive Library Management System API built with ASP.NET Core 10.0 and PostgreSQL.
+A comprehensive Library Management System API built with ASP.NET Core 10.0 and PostgreSQL, along with RabbitMQ and MongoDB for event storage and auditing.
 
+ 
 ## Features
 
 ### Parties & Role Management
