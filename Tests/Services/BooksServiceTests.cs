@@ -7,7 +7,6 @@ using LibraryCoreApi.Events;
 using Moq;
 using LibraryCoreApi.DTOs;
 using LibraryCoreApi.Errors;
-using DnsClient.Protocol;
 
 namespace LibraryCoreApi.Tests.Services;
 
