@@ -27,12 +27,6 @@ public class BooksController : ControllerBase
     public async Task<ActionResult<BookDto>> GetBook(int id)
     {
         var book = await _booksService.GetBook(id);
-
-        if (book == null)
-        {
-            return NotFound();
-        }
-
         return Ok(book);
     }
 

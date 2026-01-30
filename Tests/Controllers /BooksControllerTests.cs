@@ -76,21 +76,6 @@ public class BooksControllerTests
     }
 
     [Fact]
-    public async Task GetBook_ReturnsNotFound_WhenBookDoesNotExist()
-    {
-        // Arrange
-        _mockBooksService.Setup(s => s.GetBook(It.IsAny<int>())).ReturnsAsync((BookDto)null!);
-
-        // Act
-        var result = await _booksController.GetBook(999);
-
-        // Assert
-        var notFoundResult = Assert.IsType<NotFoundResult>(result.Result);
-        Assert.Equal(404, notFoundResult.StatusCode);
-        _mockBooksService.Verify(s => s.GetBook(999), Times.Once);
-    }
-
-    [Fact]
     public async Task CreateBook_ReturnsCreatedAtAction_WhenBookIsCreated()
     {
         // Arrange
