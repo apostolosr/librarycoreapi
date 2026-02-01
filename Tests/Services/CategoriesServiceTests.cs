@@ -38,9 +38,13 @@ public class CategoriesServiceTests : IDisposable
     public async Task TestGetCategories()
     {
         // Arrange
+        var book = MockHelper.GetMockBook();
+        _dbContext.Books.Add(book);
+        await _dbContext.SaveChangesAsync();
+
         var categories = new List<Category>
         {
-            new Category { Name = "Test Category 1" },
+            new Category { Name = "Test Category 1", Books = new List<Book> { book } },
             new Category { Name = "Test Category 2" }
         };
         _dbContext.Categories.AddRange(categories);
@@ -52,6 +56,10 @@ public class CategoriesServiceTests : IDisposable
         Assert.Equal(2, categoriesDto.Count());
         Assert.Equal(categories.First().Id, categoriesDto.First().Id);
         Assert.Equal(categories.First().Name, categoriesDto.First().Name);
+        Assert.Equal(categories.First().Books.Count, categoriesDto.First().BookCount);
+        Assert.Equal(categories.Last().Id, categoriesDto.Last().Id);
+        Assert.Equal(categories.Last().Name, categoriesDto.Last().Name);
+        Assert.Equal(categories.Last().Books.Count, categoriesDto.Last().BookCount);
     }
 
     [Fact]
