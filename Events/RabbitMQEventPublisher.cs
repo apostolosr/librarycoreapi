@@ -12,10 +12,9 @@ public class RabbitMQEventPubliser : IEventPublisher, IAsyncDisposable
     private IConnection? _connection;
     private IChannel? _channel;
     private readonly string _exchangeName;
-
     private readonly ILogger<RabbitMQEventPubliser> _logger;
-
     private readonly ConnectionFactory _factory;
+    private readonly SemaphoreSlim _connectionLock = new(1, 1);
 
     public RabbitMQEventPubliser(IConfiguration configuration, ILogger<RabbitMQEventPubliser> logger)
     {
@@ -33,21 +32,40 @@ public class RabbitMQEventPubliser : IEventPublisher, IAsyncDisposable
             UserName = userName,
             Password = password
         };
-        
-        // Initialize connection synchronously in constructor
-        CreateConnectionAsync().GetAwaiter().GetResult();
     }
 
-    private async Task CreateConnectionAsync()
+    /// <summary>
+    /// Ensures connection and channel exist; creates them asynchronously on first use.
+    /// </summary>
+    private async Task EnsureConnectionAsync(CancellationToken cancellationToken = default)
     {
-        _connection = await _factory.CreateConnectionAsync();
-        _channel = await _connection.CreateChannelAsync();
-        await _channel.ExchangeDeclareAsync(
-            exchange: _exchangeName,
-            type: ExchangeType.Topic,
-            durable: true,
-            autoDelete: false
-        );
+        await _connectionLock.WaitAsync(cancellationToken);
+        try
+        {
+            if (_channel != null && _channel.IsOpen)
+                return;
+        
+            _connection?.Dispose();
+            _channel?.Dispose();
+
+            _connection = await _factory.CreateConnectionAsync(cancellationToken);
+            _channel = await _connection.CreateChannelAsync(null, cancellationToken);
+            await _channel.ExchangeDeclareAsync(
+                exchange: _exchangeName,
+                type: ExchangeType.Topic,
+                durable: true,
+                autoDelete: false
+            );
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Cannot ensure connection: {ErrorMessage}", ex.Message);
+            return;
+        }
+        finally
+        {
+            _connectionLock.Release();
+        }
     }
 
     /// <summary>
@@ -59,6 +77,16 @@ public class RabbitMQEventPubliser : IEventPublisher, IAsyncDisposable
     /// <returns>A task representing the asynchronous operation</returns>
     public async Task PublishEvent<T>(string eventName, T eventData) where T : class
     {
+        try
+        {
+            await EnsureConnectionAsync();
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Cannot publish event {EventName}: RabbitMQ connection failed", eventName);
+            return;
+        }
+
         if (_channel == null)
         {
             _logger.LogError("Cannot publish event: RabbitMQ channel is not initialized");

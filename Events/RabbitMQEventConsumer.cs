@@ -10,8 +10,9 @@ namespace LibraryCoreApi.Events;
 /// </summary>
 public class RabbitMQEventConsumer : BackgroundService
 {
-    private readonly IConnection _connection;
-    private readonly IChannel _channel;
+    private IConnection? _connection;
+    private IChannel? _channel;
+    private readonly ConnectionFactory _factory;
     private readonly IEventStore _eventStore;
     private readonly ILogger<RabbitMQEventConsumer> _logger;
     private readonly string _exchangeName;
@@ -24,7 +25,7 @@ public class RabbitMQEventConsumer : BackgroundService
     {
         _eventStore = eventStore;
         _logger = logger;
-        
+
         var hostName = configuration["RabbitMQ:HostName"] ?? "localhost";
         var port = int.Parse(configuration["RabbitMQ:Port"] ?? "5672");
         var userName = configuration["RabbitMQ:UserName"] ?? "guest";
@@ -32,7 +33,7 @@ public class RabbitMQEventConsumer : BackgroundService
         _exchangeName = configuration["RabbitMQ:ExchangeName"] ?? "library_events";
         _queueName = configuration["RabbitMQ:QueueName"] ?? "event_store_queue";
 
-        var factory = new ConnectionFactory
+        _factory = new ConnectionFactory
         {
             HostName = hostName,
             Port = port,
@@ -41,38 +42,45 @@ public class RabbitMQEventConsumer : BackgroundService
             AutomaticRecoveryEnabled = true,
             NetworkRecoveryInterval = TimeSpan.FromSeconds(10)
         };
+    }
 
-        // Initialize connection and channel synchronously in constructor
-        _connection = factory.CreateConnectionAsync().GetAwaiter().GetResult();
-        _channel = _connection.CreateChannelAsync().GetAwaiter().GetResult();
+    public override async Task StartAsync(CancellationToken cancellationToken)
+    {
+        _connection = await _factory.CreateConnectionAsync(cancellationToken);
+        _channel = await _connection.CreateChannelAsync(null, cancellationToken);
 
-        _channel.ExchangeDeclareAsync(
+        await _channel.ExchangeDeclareAsync(
             exchange: _exchangeName,
             type: ExchangeType.Topic,
             durable: true,
             autoDelete: false
-        ).GetAwaiter().GetResult();
+        );
 
-        _channel.QueueDeclareAsync(
+        await _channel.QueueDeclareAsync(
             queue: _queueName,
             durable: true,
             exclusive: false,
             autoDelete: false
-        ).GetAwaiter().GetResult();
+        );
 
-        // Bind queue to exchange with wildcard pattern to receive all events
-        _channel.QueueBindAsync(
+        await _channel.QueueBindAsync(
             queue: _queueName,
             exchange: _exchangeName,
-            routingKey: "#" // # matches all routing keys
-        ).GetAwaiter().GetResult();
+            routingKey: "#"
+        );
 
-        // Set QoS to process one message at a time for better reliability
-        _channel.BasicQosAsync(prefetchSize: 0, prefetchCount: 1, global: false).GetAwaiter().GetResult();
+        await _channel.BasicQosAsync(prefetchSize: 0, prefetchCount: 1, global: false);
+
+        await base.StartAsync(cancellationToken);
     }
 
     protected override async Task ExecuteAsync(CancellationToken stoppingToken)
     {
+        if (_channel == null)
+        {
+            throw new InvalidOperationException("Channel not initialized. StartAsync must complete before ExecuteAsync.");
+        }
+
         _logger.LogInformation("RabbitMQ Event Consumer started. Listening for events on queue: {QueueName}", _queueName);
 
         var consumer = new AsyncEventingBasicConsumer(_channel);
@@ -125,20 +133,20 @@ public class RabbitMQEventConsumer : BackgroundService
     public override async Task StopAsync(CancellationToken cancellationToken)
     {
         _logger.LogInformation("RabbitMQ Event Consumer is stopping...");
-        
-        if (_channel.IsOpen)
+
+        if (_channel?.IsOpen == true)
         {
             await _channel.CloseAsync();
         }
-        
-        if (_connection.IsOpen)
+
+        if (_connection?.IsOpen == true)
         {
             await _connection.CloseAsync();
         }
-        
-        _channel.Dispose();
-        _connection.Dispose();
-        
+
+        _channel?.Dispose();
+        _connection?.Dispose();
+
         await base.StopAsync(cancellationToken);
     }
 }
