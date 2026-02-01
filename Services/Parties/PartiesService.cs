@@ -83,23 +83,18 @@ public class PartiesService : IPartiesService
             CreatedAt = DateTime.UtcNow
         };
 
-        _context.Parties.Add(party);
-        await _context.SaveChangesAsync();
-
-        // Add party roles
         foreach (var roleId in createDto.RoleIds)
         {
-            _context.PartyRoles.Add(new PartyRole
+            party.PartyRoles.Add(new PartyRole
             {
-                PartyId = party.Id,
                 RoleId = roleId,
                 AssignedAt = DateTime.UtcNow
             });
         }
 
+        _context.Parties.Add(party);
         await _context.SaveChangesAsync();
         
-
         // Reload with roles
         await _context.Entry(party)
             .Collection(p => p.PartyRoles)

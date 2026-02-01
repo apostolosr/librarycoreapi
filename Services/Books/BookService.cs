@@ -118,24 +118,37 @@ public class BooksService : IBooksService
             PublishedDate = createDto.PublishedDate,
             CreatedAt = DateTime.UtcNow
         };
-
-        _context.Books.Add(book);
-        await _context.SaveChangesAsync();
-
-        // Create book copies
-        for (int i = 1; i <= createDto.NumberOfCopies; i++)
+        await using (var transaction = await _context.Database.BeginTransactionAsync()) 
         {
-            var copy = new BookCopy
+            try
             {
-                BookId = book.Id,
-                CopyNumber = $"{book.Id}-{i}",
-                IsAvailable = true,
-                CreatedAt = DateTime.UtcNow
-            };
-            _context.BookCopies.Add(copy);
-        }
 
-        await _context.SaveChangesAsync();
+                _context.Books.Add(book);
+                await _context.SaveChangesAsync();
+
+                // Create book copies
+                for (int i = 1; i <= createDto.NumberOfCopies; i++)
+                {
+                    var copy = new BookCopy
+                    {
+                        BookId = book.Id,
+                        CopyNumber = $"{book.Id}-{i}",
+                        IsAvailable = true,
+                        CreatedAt = DateTime.UtcNow
+                    };
+                    _context.BookCopies.Add(copy);
+                }
+
+                await _context.SaveChangesAsync();
+
+                await transaction.CommitAsync();
+            }
+            catch (Exception ex)
+            {
+                await transaction.RollbackAsync();
+                throw new ApiException("Failed to create book: " + ex.Message);
+            }
+        }
 
         // Reload with relationships
         await _context.Entry(book)

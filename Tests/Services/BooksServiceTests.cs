@@ -7,6 +7,7 @@ using LibraryCoreApi.Events;
 using Moq;
 using LibraryCoreApi.DTOs;
 using LibraryCoreApi.Errors;
+using Microsoft.EntityFrameworkCore.Diagnostics;
 
 namespace LibraryCoreApi.Tests.Services;
 
@@ -23,6 +24,7 @@ public class BooksServiceTests : IDisposable
     {
         var options = new DbContextOptionsBuilder<DataContext>()
             .UseInMemoryDatabase(databaseName: Guid.NewGuid().ToString())
+            .ConfigureWarnings(w => w.Ignore(InMemoryEventId.TransactionIgnoredWarning))
             .Options;
 
         return new DataContext(options);
