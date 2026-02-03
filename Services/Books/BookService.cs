@@ -18,6 +18,7 @@ public class BooksService : IBooksService
         _eventManager = eventManager;
     }
 
+    // TODO: use static adapter class to map entities of all services to DTOs
     public async Task<IEnumerable<BookDto>> GetBooks()
     {
         var books = await _context.Books

@@ -33,6 +33,7 @@ public class EventsService : IEventsService
     public async Task<EventLastIndexDto> GetUserEvents(int lastIndex = 0, int pageSize = 100)
     {
         var events = await _eventStore.GetUserEventsAsync(lastIndex, pageSize);
+         // TODO: use static adapter class to map event documents to DTOs
         var eventDtos = events.Select(e => new EventDto 
         {
             EventName = e.EventName,
